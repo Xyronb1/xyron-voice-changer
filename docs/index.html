@@ -26,7 +26,7 @@
 html{scroll-behavior:smooth;scroll-padding-top:76px}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:var(--accent2);text-decoration:none} a:hover{text-decoration:underline}
-img{max-width:100%;display:block}
+img{max-width:100%;height:auto;display:block}
 code,kbd,pre{font-family:var(--mono)}
 code{background:#1d2036;border:1px solid var(--line);border-radius:6px;padding:.08em .4em;font-size:.88em}
 kbd{display:inline-block;background:#202442;border:1px solid #343a60;border-bottom-width:3px;border-radius:7px;padding:.1em .55em;font-size:.85em;color:var(--text)}
@@ -55,7 +55,8 @@ h3{font-size:19px}
 /* hero */
 .hero{position:relative;padding:84px 0 40px;border-top:0;overflow:hidden}
 .hero:before{content:"";position:absolute;inset:-30% -10% auto;height:720px;background:radial-gradient(600px 340px at 30% 30%,rgba(124,92,255,.32),transparent 70%),radial-gradient(520px 300px at 78% 20%,rgba(46,230,168,.14),transparent 70%);pointer-events:none}
-.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
+.hero .wrap{position:relative;display:grid;grid-template-columns:.82fr 1.18fr;gap:44px;align-items:center;max-width:1340px}
+.hero .wrap+.wrap{display:block;max-width:var(--maxw)}
 .hero h1{font-size:clamp(40px,6vw,66px);font-weight:800;margin-bottom:18px}
 .grad{background:linear-gradient(90deg,#fff 0%,#c9bcff 45%,var(--teal) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p.lead{font-size:19px;margin-bottom:28px}
@@ -71,7 +72,12 @@ h3{font-size:19px}
 .btn.ghost:hover{background:#191b2e}
 .btn svg{width:18px;height:18px}
 .fine{font-size:13px;color:var(--dim)}
-.shot{border-radius:18px;border:1px solid #2b2f4d;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 0 6px rgba(124,92,255,.07)}
+.shot{width:100%;height:auto;aspect-ratio:1725/1020;object-fit:contain;background:#0e0f1a;border-radius:18px;border:1px solid #2b2f4d;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 0 6px rgba(124,92,255,.07);cursor:zoom-in;transition:transform .25s,box-shadow .25s}
+.shot:hover{transform:translateY(-3px);box-shadow:0 50px 100px -30px rgba(0,0,0,.95),0 0 0 6px rgba(124,92,255,.16)}
+.lightbox{position:fixed;inset:0;z-index:100;background:rgba(6,7,12,.92);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+.lightbox.on{display:flex}
+.lightbox img{max-width:min(1725px,100%);max-height:100%;width:auto;height:auto;border-radius:12px;border:1px solid #2b2f4d;box-shadow:0 30px 80px rgba(0,0,0,.8)}
+.lightbox button{position:absolute;top:16px;right:20px;background:#1b1e33;border:1px solid #2c3052;color:var(--text);border-radius:10px;width:40px;height:40px;font-size:22px;cursor:pointer}
 @media (max-width:900px){.hero .wrap{grid-template-columns:1fr}.hero{padding-top:56px}}
 
 /* stats */
@@ -657,6 +663,16 @@ document.querySelectorAll(".tab[data-t]").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab[data-t]").forEach(x=>x.setAttribute("aria-selected",x===t));
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+t.dataset.t));
 });
+
+/* ---------- screenshot lightbox ---------- */
+const lb=document.createElement("div"); lb.className="lightbox"; lb.setAttribute("role","dialog"); lb.setAttribute("aria-label","Screenshot preview");
+lb.innerHTML='<button aria-label="Close">×</button><img alt="">'; document.body.appendChild(lb);
+const lbImg=lb.querySelector("img");
+const closeLb=()=>lb.classList.remove("on");
+document.querySelectorAll("img.shot").forEach(img=>{img.tabIndex=0; img.setAttribute("role","button");
+  const open=()=>{lbImg.src=img.currentSrc||img.src; lbImg.alt=img.alt; lb.classList.add("on")};
+  img.onclick=open; img.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}}});
+lb.onclick=closeLb; document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLb()});
 
 /* ---------- copy buttons ---------- */
 document.querySelectorAll(".copy").forEach(b=>b.onclick=()=>{
