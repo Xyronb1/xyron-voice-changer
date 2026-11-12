@@ -570,8 +570,8 @@ is discarded after playback.
       <sub>Product vision, voice design &amp; preset tuning, hardware testing, releases</sub>
     </td>
     <td align="center" width="33%">
-      <a href="https://www.anthropic.com/claude"><img src="docs/assets/xyrox-avatar.svg" width="96" alt="XYROX"><br><b>XYROX</b></a><br>
-      <sub>AI co-developer · Claude by Anthropic</sub><br>
+      <a href="https://github.com/claude"><img src="https://github.com/claude.png?size=160" width="96" alt="Claude"><br><b>Claude</b></a><br>
+      <sub>AI co-developer · by Anthropic</sub><br>
       <sub>DSP engine &amp; audio routing, internationalisation, test suite, code review, documentation</sub>
     </td>
     <td align="center" width="33%">
@@ -614,4 +614,4 @@ impersonate real people, commit fraud, harass anyone, or break the rules of the 
 Xyron Voice Changer is released under the [MIT License](LICENSE).
 VB-CABLE is © Vincent Burel and is **not** covered by this license; see its own `readme.txt`.
 
-<div align="center"><sub>Made with 💜 by Xyron, XYROX &amp; mirac221</sub></div>
+<div align="center"><sub>Made with 💜 by Xyron, Claude &amp; mirac221</sub></div>
