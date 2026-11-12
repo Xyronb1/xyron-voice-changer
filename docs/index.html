@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xyron Voice Changer</title>
+<meta name="description" content="Free, open-source, real-time voice changer for Windows. Formant-aware pitch shifting, 37 voice presets, noise suppression and studio effects for Discord, OBS, games and calls.">
+<meta property="og:title" content="Xyron Voice Changer">
+<meta property="og:description" content="Real-time, formant-aware voice changer for Windows: 37 presets, studio effects, works with Discord, OBS and games.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/screenshot-main.png">
+<meta name="theme-color" content="#0b0c14">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0c14; --bg2:#10111c; --card:#151726; --card2:#1b1e31; --line:#262a42;
+  --text:#eef0ff; --muted:#a3a8c7; --dim:#6f7496;
+  --accent:#7c5cff; --accent2:#9b82ff; --teal:#2ee6a8; --pink:#ff6fb5; --blue:#4fa3ff; --violet:#b57bff; --gold:#ffc857;
+  --radius:16px; --maxw:1180px;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--accent2);text-decoration:none} a:hover{text-decoration:underline}
+img{max-width:100%;display:block}
+code,kbd,pre{font-family:var(--mono)}
+code{background:#1d2036;border:1px solid var(--line);border-radius:6px;padding:.08em .4em;font-size:.88em}
+kbd{display:inline-block;background:#202442;border:1px solid #343a60;border-bottom-width:3px;border-radius:7px;padding:.1em .55em;font-size:.85em;color:var(--text)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+section{padding:88px 0;border-top:1px solid #161829}
+h1,h2,h3{line-height:1.2;margin:0 0 .5em;letter-spacing:-.02em}
+h2{font-size:clamp(28px,4vw,40px)}
+h3{font-size:19px}
+.eyebrow{display:inline-block;font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.lead{color:var(--muted);font-size:18px;max-width:760px}
+.muted{color:var(--muted)}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(11,12,20,.82);backdrop-filter:blur(14px);border-bottom:1px solid #1a1c2e}
+.nav .wrap{display:flex;align-items:center;gap:22px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text);letter-spacing:.02em}
+.brand img{width:30px;height:30px}
+.brand span small{display:block;font:600 9px/1 var(--mono);letter-spacing:.2em;color:var(--accent2)}
+.nav ul{display:flex;gap:4px;list-style:none;margin:0 0 0 auto;padding:0}
+.nav ul a{color:var(--muted);font-size:14px;font-weight:500;padding:8px 11px;border-radius:9px}
+.nav ul a:hover{color:var(--text);background:#181a2c;text-decoration:none}
+.nav .gh{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:7px 12px;color:var(--text);font-size:14px;font-weight:600}
+.nav .gh:hover{background:#181a2c;text-decoration:none}
+@media (max-width:980px){.nav ul{display:none}.nav .gh{margin-left:auto}}
+
+/* hero */
+.hero{position:relative;padding:84px 0 40px;border-top:0;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:-30% -10% auto;height:720px;background:radial-gradient(600px 340px at 30% 30%,rgba(124,92,255,.32),transparent 70%),radial-gradient(520px 300px at 78% 20%,rgba(46,230,168,.14),transparent 70%);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(40px,6vw,66px);font-weight:800;margin-bottom:18px}
+.grad{background:linear-gradient(90deg,#fff 0%,#c9bcff 45%,var(--teal) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{font-size:19px;margin-bottom:28px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+.badge{font:600 12px/1 var(--mono);color:var(--muted);border:1px solid var(--line);background:#121423;border-radius:999px;padding:7px 11px}
+.badge b{color:var(--teal);font-weight:600}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:12px;padding:13px 20px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:transform .15s,background .15s}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 10px 30px -10px rgba(124,92,255,.8)}
+.btn.primary:hover{background:#8a6dff}
+.btn.ghost{border-color:var(--line);color:var(--text);background:#121423}
+.btn.ghost:hover{background:#191b2e}
+.btn svg{width:18px;height:18px}
+.fine{font-size:13px;color:var(--dim)}
+.shot{border-radius:18px;border:1px solid #2b2f4d;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 0 6px rgba(124,92,255,.07)}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}.hero{padding-top:56px}}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.stat b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
+.stat span{color:var(--muted);font-size:14px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* grids & cards */
+.grid{display:grid;gap:16px}
+.grid>*,.gallery>*,.hero .wrap>*{min-width:0}
+.g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:980px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.g3,.g2,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+.card p{color:var(--muted);margin:0;font-size:15px}
+.icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:14px;background:rgba(124,92,255,.14);color:var(--accent2)}
+.icon svg{width:22px;height:22px}
+.head{margin-bottom:40px}
+
+/* demo players */
+.demo-top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:22px}
+.script{background:var(--card);border:1px dashed #33385c;border-radius:12px;padding:12px 16px;color:var(--muted);font-size:14px;max-width:640px}
+.script b{color:var(--text)}
+.player{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:border-color .2s,background .2s}
+.player.playing{border-color:var(--accent);background:var(--card2)}
+.player .pb{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer}
+.player .pb:hover{background:#8a6dff}
+.player .pb svg{width:18px;height:18px}
+.player.original .pb{background:#2a2e4b}
+.player .meta{flex:1;min-width:0}
+.player .meta b{display:block;font-size:15px}
+.player .meta small{color:var(--dim);font:500 12px/1.3 var(--mono)}
+.bar{height:4px;background:#262a44;border-radius:4px;margin-top:8px;overflow:hidden;cursor:pointer}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--teal))}
+.emoji{font-size:22px;flex:none;width:30px;text-align:center}
+
+/* gallery */
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.gallery figure{margin:0}
+.gallery figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+@media (max-width:760px){.gallery{grid-template-columns:1fr}}
+
+/* pipeline */
+.pipe{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:6px 2px 16px}
+.stage{flex:1 0 170px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative}
+.stage h4{margin:0 0 8px;font-size:14px;letter-spacing:.02em}
+.stage ul{margin:0;padding:0;list-style:none;color:var(--muted);font-size:13px;line-height:1.7}
+.stage .tag{font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal);display:block;margin-bottom:8px}
+.arrow{flex:none;width:34px;display:grid;place-items:center;color:var(--dim)}
+.stage.hi{border-color:rgba(124,92,255,.6);background:linear-gradient(180deg,#1b1a33,#151726)}
+.note{font-size:14px;color:var(--muted);margin-top:14px}
+
+/* steps */
+.steps{counter-reset:s;display:grid;gap:16px}
+.step{display:grid;grid-template-columns:52px 1fr;gap:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.step:before{counter-increment:s;content:counter(s);width:42px;height:42px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-weight:800;font-size:18px}
+.step h3{margin-bottom:6px}
+.step p,.step li{color:var(--muted);font-size:15px}
+.step ul{margin:8px 0 0;padding-left:18px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{background:#121423;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{display:none}.panel.on{display:block}
+.panel ol{margin:0;padding-left:20px;color:var(--muted)} .panel li{margin:6px 0}
+
+/* table */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #20233a;vertical-align:top}
+th{font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);background:#121423;position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);white-space:nowrap;color:var(--text)}
+td .k{font-family:var(--mono);font-size:12px;color:var(--accent2)}
+.chip{display:inline-block;font:700 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:6px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.search{flex:1;min-width:220px;background:#121423;border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--text);font:inherit;font-size:14px}
+.search:focus{outline:2px solid var(--accent);border-color:transparent}
+.count{color:var(--dim);font:500 13px var(--mono)}
+
+/* code */
+.code{position:relative;background:#0d0e18;border:1px solid var(--line);border-radius:14px;margin:12px 0}
+.code pre{margin:0;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.65;color:#d6d9f5}
+.code .cap{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #1c1f33;font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.copy{background:#1b1e33;border:1px solid #2c3052;color:var(--muted);border-radius:7px;padding:5px 9px;font:600 11px var(--mono);cursor:pointer}
+.copy:hover{color:var(--text)}
+.c-c{color:#6f7496}.c-k{color:var(--teal)}.c-s{color:#ffd28a}.c-o{color:#9b82ff}
+
+/* faq */
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";color:var(--accent2);font-size:22px;line-height:1}
+details[open] summary:after{content:"–"}
+details p,details li{color:var(--muted);font-size:15px}
+details ul{padding-left:18px}
+
+/* devs */
+.dev{text-align:center;padding:30px 24px}
+.avatar{width:96px;height:96px;border-radius:50%;margin:0 auto 16px;border:3px solid #2c3052;object-fit:cover;background:#1b1e31}
+.dev h3{margin-bottom:2px}
+.role{font:600 12px/1.4 var(--mono);color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.dev p{font-size:14px}
+.dev .links{margin-top:14px;font-size:14px;font-weight:600}
+.ai-av{display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#9b82ff,#5a3ee0 70%)}
+.ai-av svg{width:44px;height:44px;color:#fff}
+
+.callout{display:flex;gap:14px;background:rgba(255,200,87,.07);border:1px solid rgba(255,200,87,.3);border-radius:14px;padding:16px 18px;color:#f1e3c0;font-size:14.5px;margin-top:18px}
+.callout.info{background:rgba(79,163,255,.07);border-color:rgba(79,163,255,.3);color:#cfe3ff}
+.callout b{color:#fff}
+
+footer{border-top:1px solid #161829;padding:40px 0 60px;color:var(--dim);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/icon.png" alt="" width="30" height="30"><span>XYRON<small>VOICE CHANGER</small></span></a>
+    <ul>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#presets">Presets</a></li>
+      <li><a href="#controls">Controls</a></li>
+      <li><a href="#cli">CLI</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#developers">Team</a></li>
+    </ul>
+    <a class="gh" href="https://github.com/Xyronb1/xyron-voice-changer"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Free &amp; open source · Windows 10 / 11</span>
+      <h1><span class="grad">Become any voice.</span><br>In real time.</h1>
+      <p class="lead">Xyron Voice Changer is a studio-grade, formant-aware voice changer for Windows. Pick one of 37 hand-tuned voices, or sculpt your own with 31 live controls, and send the result straight to Discord, OBS, games and video calls.</p>
+      <div class="badges">
+        <span class="badge">v<b>1.2.0</b></span>
+        <span class="badge">latency <b>~21–85 ms</b></span>
+        <span class="badge"><b>100%</b> offline</span>
+        <span class="badge">Python <b>3.12</b></span>
+        <span class="badge"><b>113</b> tests passing</span>
+        <span class="badge">license <b>MIT</b></span>
+      </div>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Xyronb1/xyron-voice-changer/releases/latest/download/Xyron-Voice-Changer-win64.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 21h16"/></svg>Download for Windows</a>
+        <a class="btn ghost" href="#demo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Hear the demo</a>
+      </div>
+      <p class="fine">Single portable <code>.exe</code> · no installer · no account · no telemetry. Requires the free <a href="https://vb-audio.com/Cable/">VB-CABLE</a> driver to feed other apps.</p>
+    </div>
+    <img class="shot" src="assets/screenshot-main.png" alt="Xyron Voice Changer main window with preset cards, live spectrum and voice controls" width="1725" height="1020">
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><b>37</b><span>built-in voices in 4 categories</span></div>
+      <div class="stat"><b>31</b><span>real-time parameters</span></div>
+      <div class="stat"><b>4</b><span>engine quality modes</span></div>
+      <div class="stat"><b>2</b><span>languages: English &amp; Turkish</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="demo">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Listen</span>
+      <h2>One sentence, twelve voices</h2>
+      <p class="lead">Every clip below was produced by Xyron Voice Changer's own engine from the <em>same</em> recording, using the built-in presets with no manual tweaking. Press play and compare.</p>
+    </div>
+    <div class="demo-top">
+      <div class="script">Script: <b>“Hey there! This is a quick demo of Xyron Voice Changer. Same sentence, same microphone, a completely different voice.”</b></div>
+      <span class="fine">Source: a synthetic male speech sample · Studio Quality mode · MP3 160 kbps</span>
+    </div>
+    <div class="grid g3" id="players"></div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Features</span>
+      <h2>Built like a studio plug-in</h2>
+      <p class="lead">Most voice changers just speed up or slow down your voice. Xyron Voice Changer separates <b>pitch</b> (how high you speak) from <b>formant</b> (the size of your throat) so a deep voice sounds deep and a female voice sounds like a person, not a chipmunk.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h3l3-8 4 16 3-8h5"/></svg></div><h3>Formant-aware pitch shifting</h3><p>Phase-locked Laroche–Dolson peak shifting plus a cepstral spectral envelope keep pitch and timbre independent, with far less of the “phasey” robotic artefact.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></div><h3>37 hand-tuned presets</h3><p>Female, Male, Character and Effect voices: from Natural Female and Radio DJ to Demon, Ghost, Walkie-Talkie and Underwater. Save your own in the <em>Mine</em> tab.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18V6m5 12V10m5 8V4m5 14v-6"/></svg></div><h3>Studio cleanup</h3><p>Spectral noise suppression with a <em>Learn room noise</em> button, noise gate, de-esser, 4-band EQ, compressor and a look-ahead peak limiter that never clips.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="15" cy="9" r="2.4"/></svg></div><h3>XY voice pad</h3><p>Drag a single dot to move pitch and formant together: up for higher, down for deeper, right for a more feminine timbre. Double-click to snap back to your natural voice.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v6m0 8v6M4.9 4.9l4.2 4.2m5.8 5.8 4.2 4.2M2 12h6m8 0h6"/></svg></div><h3>Character &amp; FX rack</h3><p>Robot vocoder, whisper, breath, vibrato, octave harmonizer, distortion, bitcrusher, chorus, phaser, echo and reverb, all adjustable live while you talk.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div><h3>Global hotkeys</h3><p><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd> raw voice, <kbd>M</kbd> mute, <kbd>V</kbd> on/off. They work even while a full-screen game or Discord has focus.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zM19 11a7 7 0 0 1-14 0M12 18v3"/></svg></div><h3>Hear what others hear</h3><p><em>Record 5 s and listen</em> plays back exactly what your friends receive, and <em>Hear myself</em> monitors live through your headphones. Click-free A/B with <em>Raw voice</em>.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 15l2 2 4-4"/></svg></div><h3>Offline file conversion</h3><p>Run any WAV, MP3, FLAC, OGG, M4A or AIFF file through the same engine and save a 24-bit WAV, from the app or from the command line.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Private by design</h3><p>No network code at all: no account, no cloud, no telemetry. Your voice never leaves your PC. Settings live in a plain JSON file you can read.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0zM3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div><h3>English &amp; Turkish</h3><p>The whole interface, every preset and the CLI are translated. The language follows your Windows display language on first launch and can be switched any time.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div><h3>Self-healing audio</h3><p>Adaptive micro-resampling absorbs clock drift between sound cards, a watchdog restarts dropped streams, and live latency, CPU and buffer health are always on screen.</p></div>
+      <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></div><h3>Open &amp; tested</h3><p>Clean, typed Python with 113 automated tests covering the DSP engine, effects, audio routing, translations, presets and CLI.</p></div>
+    </div>
+    <div class="gallery" style="margin-top:40px">
+      <figure><img class="shot" src="assets/screenshot-main.png" alt="Main window with the Studio Male preset selected" loading="lazy" width="1725" height="1020"><figcaption>Main window: device routing, live telemetry, preset browser and the voice-identity pad.</figcaption></figure>
+      <figure><img class="shot" src="assets/screenshot-character.png" alt="Character category with the Demon preset selected" loading="lazy" width="1725" height="1020"><figcaption>Character voices: selecting <em>Demon</em> moves the XY pad to −6 st pitch / −3.5 st formant.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Under the hood</span>
+      <h2>How your voice travels</h2>
+      <p class="lead">Audio is processed in mono at 48 kHz. A dedicated audio thread does the heavy lifting while the interface only updates parameters, so dragging a slider never interrupts your voice.</p>
+    </div>
+    <div class="pipe" role="list" aria-label="Signal flow">
+      <div class="stage" role="listitem"><span class="tag">Input</span><h4>Microphone</h4><ul><li>WASAPI · MME · DirectSound</li><li>Thread-safe ring buffer</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage hi" role="listitem"><span class="tag">Spectral engine (STFT)</span><h4>Voice identity</h4><ul><li>1 · Noise suppression</li><li>2 · Pitch shift (phase-locked)</li><li>3 · Formant via cepstral envelope</li><li>4 · Robot · whisper · breath · harmonizer</li><li>5 · De-esser</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage" role="listitem"><span class="tag">Pedalboard chain</span><h4>Tone &amp; character</h4><ul><li>Gate → Low/High cut</li><li>Bass · Body · Clarity · Brightness</li><li>Distortion · Bitcrush</li><li>Chorus · Phaser</li><li>Compressor → Echo → Reverb</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage" role="listitem"><span class="tag">Safety</span><h4>Limiter</h4><ul><li>Look-ahead peak limiter</li><li>tanh soft ceiling (−0.2 dBFS)</li><li>Click-free bypass &amp; mute ramps</li></ul></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage" role="listitem"><span class="tag">Output</span><h4>VB-CABLE + headphones</h4><ul><li>Discord, OBS, games, calls</li><li>Optional self-monitoring</li><li>Adaptive ±0.5% resampling</li></ul></div>
+    </div>
+    <p class="note">Effects are only instantiated when they are switched on, and the chain is rebuilt only when its <em>structure</em> changes, so reverb and echo tails keep ringing while you move sliders.</p>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Get started</span>
+      <h2>Up and running in 5 minutes</h2>
+      <p class="lead">You need Windows 10 or 11 (64-bit), a microphone and, to send your new voice to other apps, the free VB-CABLE virtual audio driver.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div><h3>Install the virtual microphone (one time only)</h3>
+        <p>Download VB-CABLE from the <a href="https://vb-audio.com/Cable/">official VB-Audio website</a> (or the unmodified copy attached to our <a href="https://github.com/Xyronb1/xyron-voice-changer/releases/latest">release</a>), extract it, then right-click <code>VBCABLE_Setup_x64.exe</code> → <b>Run as administrator</b> → <b>Install Driver</b>, and <b>restart your PC</b>.</p>
+        <p class="fine" style="margin-top:8px">Tip: extract it into a folder named <code>VBCable</code> next to the app and the in-app <em>“VB-Cable not found: Install”</em> button will launch the installer for you.</p></div></div>
+      <div class="step"><div><h3>Download and launch Xyron Voice Changer</h3>
+        <p>Grab <code>Xyron-Voice-Changer-win64.exe</code> from the <a href="https://github.com/Xyronb1/xyron-voice-changer/releases/latest">latest release</a> and double-click it. No installation needed. The first launch takes 5–10 seconds while it unpacks.</p>
+        <ul><li><b>“Windows protected your PC”</b>: click <em>More info</em> → <em>Run anyway</em>. The app is not code-signed yet, so SmartScreen shows this for every new build.</li>
+        <li><b>Antivirus says “Access denied”</b>: add the EXE or its folder to your antivirus exclusions, or use the <em>portable folder</em> build, which starts faster and triggers fewer false positives.</li></ul></div></div>
+      <div class="step"><div><h3>Pick your devices</h3>
+        <p>In the left sidebar under <b>Audio devices</b>:</p>
+        <ul><li><b>Audio system</b>: <code>Windows WASAPI</code> (recommended; try <code>MME</code> if you hear crackles)</li>
+        <li><b>Microphone</b>: your real microphone</li>
+        <li><b>Virtual microphone</b>: <code>CABLE Input (VB-Audio Virtual Cable)</code></li>
+        <li><b>Headphones</b>: optional, to hear yourself</li></ul></div></div>
+      <div class="step"><div><h3>Press START and choose a voice</h3>
+        <p>Click <b>START</b>, then <b>Learn room noise</b> and stay silent for 2–3 seconds. Click any voice card. Use <b>Record 5 s and listen</b> to hear exactly what others will hear.</p></div></div>
+      <div class="step"><div><h3>Point your apps at the cable</h3>
+        <p>In Discord, OBS, your game or meeting app, set the <b>input device / microphone</b> to <code>CABLE Output (VB-Audio Virtual Cable)</code>. See the app-specific guides below.</p></div></div>
+    </div>
+
+    <h3 style="margin:48px 0 14px">App-specific setup</h3>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-t="discord">Discord</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="obs">OBS Studio</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="games">Games</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="calls">Zoom / Teams / Meet</button>
+    </div>
+    <div class="card">
+      <div class="panel on" id="p-discord"><ol>
+        <li>Open <b>User Settings → Voice &amp; Video</b>.</li>
+        <li>Set <b>Input Device</b> to <code>CABLE Output (VB-Audio Virtual Cable)</code>.</li>
+        <li>Turn <b>off</b> <em>Noise Suppression (Krisp)</em> and <em>Echo Cancellation</em>: Xyron Voice Changer already cleans your voice, and Krisp can mangle shifted voices.</li>
+        <li>Set <b>Input Sensitivity</b> to automatic or use Push-to-Talk as usual.</li>
+        <li>Use <b>Let's Check</b> in Discord, or Xyron's <em>Record 5 s and listen</em>, to verify.</li></ol></div>
+      <div class="panel" id="p-obs"><ol>
+        <li>In <b>Sources</b>, click <b>+</b> → <b>Audio Input Capture</b>.</li>
+        <li>Choose <b>Device</b>: <code>CABLE Output (VB-Audio Virtual Cable)</code>.</li>
+        <li>Mute or remove your original <em>Mic/Aux</em> source so viewers don't hear both voices.</li>
+        <li>Optional: use the global hotkey <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd> on stream to toggle between your real and changed voice.</li></ol></div>
+      <div class="panel" id="p-games"><ol>
+        <li>Open the game's <b>Audio / Voice chat</b> settings.</li>
+        <li>Set the <b>Microphone / Input device</b> to <code>CABLE Output (VB-Audio Virtual Cable)</code>.</li>
+        <li>If the game has no device selector it uses the Windows default: in <em>Sound settings → Input</em>, set <code>CABLE Output</code> as the default device.</li>
+        <li>Global hotkeys keep working while the game is full-screen.</li></ol></div>
+      <div class="panel" id="p-calls"><ol>
+        <li>Open <b>Settings → Audio</b> in Zoom, Teams or Google Meet.</li>
+        <li>Choose <code>CABLE Output (VB-Audio Virtual Cable)</code> as the <b>Microphone</b>.</li>
+        <li>Disable the app's own heavy noise suppression for the cleanest result.</li>
+        <li>For professional calls, try the <em>Studio Male</em> preset: your own voice, just cleaner.</li></ol></div>
+    </div>
+  </div>
+</section>
+
+<section id="presets">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Voice library</span>
+      <h2>37 built-in voices</h2>
+      <p class="lead">Values are tuned for a typical adult male speaking voice (~100–140 Hz). Using a higher voice? Start from <em>Female to Male</em> or nudge the XY pad. Every preset is a starting point: adjust, then <em>Save profile</em>.</p>
+    </div>
+    <div class="filters">
+      <input class="search" id="psearch" type="search" placeholder="Search voices, e.g. “deep”, “robot”, “radio”…" aria-label="Search presets">
+      <div class="tabs" id="pcats" style="margin:0"></div>
+      <span class="count" id="pcount"></span>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th></th><th>Voice</th><th>Category</th><th>Pitch</th><th>Formant</th><th>Description</th><th>CLI key</th></tr></thead>
+      <tbody id="ptable"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="controls">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Reference</span>
+      <h2>Every control, explained</h2>
+      <p class="lead">All 31 parameters update in real time. <b>st</b> = semitones (12 st = one octave). Percent values run from 0 (off) to 100%.</p>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Section</th><th>Control</th><th>Range</th><th>Default</th><th>What it does</th></tr></thead>
+      <tbody id="ctable"></tbody>
+    </table></div>
+
+    <div class="grid g2" style="margin-top:32px">
+      <div class="card">
+        <h3>Engine quality modes</h3>
+        <p style="margin-bottom:14px">Choose in <em>Audio devices → Engine quality</em>. Engine latency is the STFT window; your sound card adds a few more milliseconds.</p>
+        <div class="tablewrap" style="background:transparent"><table>
+          <thead><tr><th>Mode</th><th>FFT / hop</th><th>Engine latency</th><th>Best for</th></tr></thead>
+          <tbody>
+            <tr><td><b>Maximum Clarity</b><br><span class="k">max</span></td><td class="num">4096 / 512</td><td class="num">≈ 85 ms</td><td>Deep voices that sound grainy when shifted</td></tr>
+            <tr><td><b>Studio Quality</b> (default)<br><span class="k">studio</span></td><td class="num">2048 / 256</td><td class="num">≈ 43 ms</td><td>Everyday use, streaming, voice chat</td></tr>
+            <tr><td><b>Balanced</b><br><span class="k">balanced</span></td><td class="num">2048 / 512</td><td class="num">≈ 43 ms</td><td>Older CPUs (half the processing)</td></tr>
+            <tr><td><b>Low Latency</b><br><span class="k">low_latency</span></td><td class="num">1024 / 256</td><td class="num">≈ 21 ms</td><td>Competitive games, singing along</td></tr>
+          </tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Global hotkeys</h3>
+        <p style="margin-bottom:14px">Registered system-wide through the Windows API, so they work while any other app has focus. If another program already owns a combination, the app tells you on start-up.</p>
+        <div class="tablewrap" style="background:transparent"><table>
+          <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td class="num"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd></td><td><b>Raw voice</b>: instantly bypass the changer (click-free A/B)</td></tr>
+            <tr><td class="num"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd></td><td><b>Mute</b> the microphone</td></tr>
+            <tr><td class="num"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>V</kbd></td><td><b>Start / stop</b> the voice changer</td></tr>
+          </tbody></table></div>
+        <div class="callout info"><span>💡</span><span>Hotkeys can be turned off with <code>"hotkey_enabled": false</code> in <code>settings.json</code>.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cli">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Command line</span>
+      <h2>Scriptable, too</h2>
+      <p class="lead">Run <code>main.py</code> without arguments to open the app. With arguments, it becomes a command-line tool for batch conversion and diagnostics. Output follows <code>--lang</code>, your saved language, or your system language.</p>
+    </div>
+    <div class="grid g2">
+      <div>
+        <div class="code"><div class="cap">List all presets<button class="copy">Copy</button></div><pre><span class="c-k">python</span> main.py --list-presets --lang en</pre></div>
+        <div class="code"><div class="cap">Output (excerpt)</div><pre><span class="c-c">f_natural        Female    Natural Female       pitch=+10.0 formant=+3.2
+m_deep           Male      Deep Male            pitch=-3.0 formant=-1.5
+c_robot          Character Robot                pitch=+0.0 formant=+0.0
+e_radio          Effect    Walkie-Talkie        pitch=+0.0 formant=+0.0</span></pre></div>
+        <div class="code"><div class="cap">Show audio devices<button class="copy">Copy</button></div><pre><span class="c-k">python</span> main.py --list-devices</pre></div>
+        <div class="code"><div class="cap">Output (example)</div><pre><span class="c-c">== Windows WASAPI
+  IN  [12] Microphone (USB Audio)  &lt;- suggested microphone
+  OUT [ 9] CABLE Input (VB-Audio Virtual Cable)  &lt;- virtual cable
+  OUT [ 7] Headphones (Realtek Audio)  &lt;- headphones</span></pre></div>
+      </div>
+      <div>
+        <div class="code"><div class="cap">Convert a file with a preset<button class="copy">Copy</button></div><pre><span class="c-k">python</span> main.py --render <span class="c-s">podcast.mp3</span> <span class="c-s">podcast_trailer.wav</span> <span class="c-o">--preset</span> m_trailer</pre></div>
+        <div class="code"><div class="cap">Custom pitch and formant<button class="copy">Copy</button></div><pre><span class="c-c"># +5 semitones higher, throat 2 semitones smaller</span>
+<span class="c-k">python</span> main.py --render <span class="c-s">in.wav</span> <span class="c-s">out.wav</span> <span class="c-o">--pitch</span> 5 <span class="c-o">--formant</span> 2 <span class="c-o">--quality</span> max</pre></div>
+        <div class="code"><div class="cap">Batch-convert a folder (PowerShell)<button class="copy">Copy</button></div><pre><span class="c-k">Get-ChildItem</span> .\voice-lines\*.wav | <span class="c-k">ForEach-Object</span> {
+  python main.py --render <span class="c-s">$_.FullName</span> <span class="c-s">".\out\$($_.BaseName)_robot.wav"</span> <span class="c-o">--preset</span> c_robot
+}</pre></div>
+        <div class="tablewrap" style="margin-top:12px"><table>
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="num">--list-presets</td><td>List built-in and saved presets</td></tr>
+            <tr><td class="num">--list-devices</td><td>List audio devices per audio system, with suggestions</td></tr>
+            <tr><td class="num">--render IN OUT</td><td>Process WAV/MP3/FLAC/OGG/M4A/AIFF → 24-bit 48 kHz WAV</td></tr>
+            <tr><td class="num">--preset KEY</td><td>Preset key (default <code>m_clean</code>)</td></tr>
+            <tr><td class="num">--pitch / --formant N</td><td>Override pitch / formant in semitones (−12…+12)</td></tr>
+            <tr><td class="num">--quality MODE</td><td><code>max</code> · <code>studio</code> · <code>balanced</code> · <code>low_latency</code></td></tr>
+            <tr><td class="num">--lang tr|en</td><td>Language for CLI output (and the app window)</td></tr>
+            <tr><td class="num">--version / --debug</td><td>Show version · show full traceback on errors</td></tr>
+          </tbody></table></div>
+        <p class="fine" style="margin-top:10px">Exit codes: <code>0</code> success · <code>1</code> runtime error · <code>2</code> usage error (missing file, unknown preset).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="source">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">For developers</span>
+      <h2>Run, test and build from source</h2>
+      <p class="lead">Requires <a href="https://www.python.org/downloads/">Python 3.12+</a> on Windows. Dependencies: numpy, sounddevice (PortAudio), pedalboard, customtkinter and Pillow.</p>
+    </div>
+    <div class="grid g2">
+      <div>
+        <div class="code"><div class="cap">1 · Clone and install<button class="copy">Copy</button></div><pre><span class="c-k">git</span> clone https://github.com/Xyronb1/xyron-voice-changer.git
+<span class="c-k">cd</span> xyron-voice-changer
+<span class="c-k">python</span> -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt</pre></div>
+        <div class="code"><div class="cap">2 · Run the app<button class="copy">Copy</button></div><pre>.venv\Scripts\python.exe main.py</pre></div>
+        <div class="code"><div class="cap">3 · Run the test suite<button class="copy">Copy</button></div><pre>.venv\Scripts\python.exe -m pip install pytest
+.venv\Scripts\python.exe -m pytest</pre></div>
+      </div>
+      <div>
+        <div class="code"><div class="cap">4 · Build the EXE (PyInstaller)<button class="copy">Copy</button></div><pre>.venv\Scripts\python.exe -m pip install pyinstaller
+<span class="c-c"># single portable file -> dist\Xyron Voice Changer.exe</span>
+.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean Xyron_Voice_Changer.spec
+<span class="c-c"># folder build: faster start, fewer antivirus false positives</span>
+.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean Xyron_Voice_Changer_onedir.spec</pre></div>
+        <div class="code"><div class="cap">Project layout</div><pre><span class="c-c">main.py              entry point: GUI + CLI
+xyrox_voice/
+  dsp.py             STFT engine: denoise, pitch, formant, layers
+  effects.py         Pedalboard chain + look-ahead limiter
+  processor.py       engine + effects + meters, quality modes
+  audio_io.py        devices, ring buffers, real-time router
+  ui.py              customtkinter interface
+  presets.py         37 presets + user preset store
+  params.py          all parameters, ranges, formatting
+  i18n.py            English / Turkish translations
+  hotkeys.py         global Windows hotkeys (ctypes)
+  render.py          offline file rendering
+  config.py          settings.json
+tests/               pytest suite</span></pre></div>
+      </div>
+    </div>
+    <div class="callout info"><span>🌍</span><span><b>Add a language:</b> add its code to <code>LANGUAGES</code> in <code>xyrox_voice/i18n.py</code> and a dictionary to <code>TRANSLATIONS</code>. Missing strings fall back gracefully, and <code>tests/test_i18n.py</code> tells you exactly which ones are untranslated.</span></div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="head"><span class="eyebrow">Help</span><h2>FAQ &amp; troubleshooting</h2></div>
+    <details><summary>My friends can't hear my changed voice.</summary><p>Check the chain end to end: in Xyron, <em>Virtual microphone</em> must be <code>CABLE Input</code> and the app must be started (green “Active”). In Discord or your game, the input device must be <code>CABLE Output</code>. If VB-CABLE doesn't appear anywhere, reinstall it as administrator and reboot.</p></details>
+    <details><summary>I hear crackling or dropouts.</summary><ul><li>Switch <em>Audio system</em> to <code>MME</code> or <code>Windows DirectSound</code>.</li><li>Select <em>Engine quality → Balanced</em> to halve the CPU load.</li><li>Close other apps that use the microphone in “exclusive mode”.</li><li>Watch the <b>BUFFER</b> indicator: <em>Good / Fair / Poor</em> tells you how healthy the stream is.</li></ul></details>
+    <details><summary>There is too much delay.</summary><p>Choose <em>Engine quality → Low Latency</em> (≈21 ms engine latency) and use WASAPI. Note that <em>Hear myself</em> always sounds slightly delayed and “doubled” because you also hear your real voice through your skull; <em>Record 5 s and listen</em> gives a more honest impression.</p></details>
+    <details><summary>The changed voice sounds grainy or metallic.</summary><p>Very large pitch shifts on deep voices are the hardest case. Select <em>Engine quality → Maximum Clarity</em> (about 40 ms more latency, much cleaner). Also press <em>Learn room noise</em> while silent, and avoid stacking Discord's Krisp on top.</p></details>
+    <details><summary>Windows SmartScreen or my antivirus blocks the EXE.</summary><p>The executable is built with PyInstaller and is not code-signed yet, which some antivirus engines flag by reputation alone. Choose <em>More info → Run anyway</em>, add an exclusion, use the portable folder build, or run from source. Every release lists SHA-256 checksums so you can verify the download.</p></details>
+    <details><summary>Where are my settings and saved profiles?</summary><p>In <code>%APPDATA%\Xyron_Voice_Changer\</code>: <code>settings.json</code> (devices, language, last preset) and <code>presets.json</code> (your <em>Mine</em> profiles). Delete the folder to reset everything. Settings from the earlier <em>XYROX Voice Studio</em> builds are migrated automatically.</p></details>
+    <details><summary>How do I change the language?</summary><p>Use the <em>Dil / Language</em> selector at the bottom of the left sidebar. On first launch the app picks Turkish on a Turkish Windows and English everywhere else.</p></details>
+    <details><summary>Does it work on macOS or Linux?</summary><p>The DSP engine, effects and CLI are cross-platform Python, but the app targets Windows: global hotkeys use the Win32 API and the virtual cable workflow is built around VB-CABLE. Ports are welcome; see the developer section.</p></details>
+    <details><summary>Is it really free? Is my voice recorded?</summary><p>Yes, it's free and MIT-licensed. Nothing is recorded or uploaded: the source contains no networking code. The 5-second test recording stays in memory and is discarded after playback.</p></details>
+  </div>
+</section>
+
+<section id="developers">
+  <div class="wrap">
+    <div class="head"><span class="eyebrow">The team</span><h2>Developers</h2><p class="lead">Xyron Voice Changer is built by a small human + AI team.</p></div>
+    <div class="grid g3">
+      <div class="card dev">
+        <img class="avatar" src="https://github.com/Xyronb1.png?size=192" alt="Xyron's GitHub avatar" width="96" height="96" loading="lazy">
+        <h3>Xyron</h3><div class="role">Creator · Lead developer</div>
+        <p>Project owner. Product vision, voice design and preset tuning, testing on real hardware, and releases.</p>
+        <div class="links"><a href="https://github.com/Xyronb1">@Xyronb1</a></div>
+      </div>
+      <div class="card dev">
+        <div class="avatar ai-av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.6L19.5 9l-5.7 1.5L12 16l-1.8-5.5L4.5 9l5.7-1.4z"/><path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z" opacity=".7"/></svg></div>
+        <h3>XYROX</h3><div class="role">AI co-developer · Claude by Anthropic</div>
+        <p>Xyron's AI engineering partner. DSP engine and audio routing, internationalisation, the test suite, code review and this documentation.</p>
+        <div class="links"><a href="https://www.anthropic.com/claude">claude.ai</a></div>
+      </div>
+      <div class="card dev">
+        <img class="avatar" src="https://github.com/mirac221.png?size=192" alt="mirac221's GitHub avatar" width="96" height="96" loading="lazy">
+        <h3>mirac221</h3><div class="role">Developer</div>
+        <p>Core team member contributing development, testing and feedback.</p>
+        <div class="links"><a href="https://github.com/mirac221">@mirac221</a></div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:40px">
+      <div class="card"><h3>Contributing</h3><p>Bug reports, new presets, translations and pull requests are welcome. Please run <code>python -m pytest</code> before opening a PR and describe how you tested audio changes. Open an <a href="https://github.com/Xyronb1/xyron-voice-changer/issues">issue</a> to start a discussion.</p></div>
+      <div class="card"><h3>Built with</h3><p><a href="https://github.com/spotify/pedalboard">Pedalboard</a> (Spotify) for effects and audio I/O · <a href="https://python-sounddevice.readthedocs.io/">python-sounddevice</a> / <a href="https://www.portaudio.com/">PortAudio</a> for real-time streams · <a href="https://github.com/TomSchimansky/CustomTkinter">CustomTkinter</a> for the interface · <a href="https://numpy.org/">NumPy</a> for the DSP · <a href="https://vb-audio.com/Cable/">VB-CABLE</a> by VB-Audio (donationware) for the virtual microphone.</p></div>
+    </div>
+    <div class="callout"><span>⚖️</span><span><b>Use responsibly.</b> Voice changers are for fun, privacy and creativity. Don't use Xyron Voice Changer to impersonate real people, deceive, harass or break the rules of the platforms you use.</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Xyron Voice Changer · Xyron, XYROX &amp; mirac221 · MIT License</span>
+    <span><a href="https://github.com/Xyronb1/xyron-voice-changer">Source</a> · <a href="https://github.com/Xyronb1/xyron-voice-changer/releases">Releases</a> · <a href="https://github.com/Xyronb1/xyron-voice-changer/issues">Issues</a> · <a href="#top">Back to top ↑</a></span>
+  </div>
+</footer>
+
+<script>
+const DATA = {"presets":[{"key":"f_natural","name":"Natural Female","cat":"Female","icon":"🌸","desc":"Realistic everyday female voice: pitch, timbre and fundamental change together","pitch":10.0,"formant":3.2,"changed":{"pitch":10.0,"formant":3.2,"denoise":0.3,"breath":0.03,"deess":0.3,"h1":7.0,"hpf":100.0,"presence":2.5}},{"key":"f_young","name":"Young Woman","cat":"Female","icon":"🎀","desc":"Energetic, bright and sweet young woman","pitch":11.5,"formant":3.8,"changed":{"pitch":11.5,"formant":3.8,"denoise":0.3,"breath":0.03,"deess":0.3,"h1":6.0,"hpf":120.0,"presence":3.0,"air":1.0}},{"key":"f_mature","name":"Mature Female","cat":"Female","icon":"👠","desc":"Full, elegant and confident mature woman","pitch":8.5,"formant":2.6,"changed":{"pitch":8.5,"formant":2.6,"denoise":0.3,"breath":0.03,"deess":0.3,"h1":8.0,"hpf":90.0,"body":1.0,"presence":2.0,"comp":0.5}},{"key":"f_velvet","name":"Velvet Female","cat":"Female","icon":"🍷","desc":"Slightly husky, breathy and soft female tone","pitch":8.5,"formant":2.8,"changed":{"pitch":8.5,"formant":2.8,"denoise":0.3,"breath":0.18,"deess":0.35,"h1":9.0,"hpf":90.0,"body":1.0,"presence":1.0,"air":1.0,"reverb":0.05,"room":0.3,"comp":0.55}},{"key":"f_anime","name":"Anime Girl","cat":"Female","icon":"🎌","desc":"Very bright, cute anime character voice","pitch":12.0,"formant":5.0,"changed":{"pitch":12.0,"formant":5.0,"denoise":0.3,"breath":0.03,"deess":0.35,"h1":4.0,"hpf":150.0,"presence":3.0,"air":2.0,"comp":0.5}},{"key":"f_announcer","name":"Female Announcer","cat":"Female","icon":"🎙️","desc":"Broadcast-quality, compressed and clear female announcer","pitch":9.5,"formant":3.0,"changed":{"pitch":9.5,"formant":3.0,"deess":0.4,"h1":6.0,"hpf":110.0,"presence":3.5,"air":1.0,"comp":0.75}},{"key":"f_whisper","name":"Whisper (ASMR)","cat":"Female","icon":"🤫","desc":"Soft female whisper with a close-mic feel","pitch":8.0,"formant":3.0,"changed":{"pitch":8.0,"formant":3.0,"denoise":0.4,"whisper":0.85,"breath":0.2,"deess":0.5,"hpf":150.0,"presence":2.0,"air":2.0,"reverb":0.05,"room":0.2,"comp":0.6,"volume":3.0}},{"key":"f_girl","name":"Little Girl","cat":"Female","icon":"🧸","desc":"Childlike, thin and innocent little girl voice","pitch":12.0,"formant":6.0,"changed":{"pitch":12.0,"formant":6.0,"denoise":0.3,"deess":0.35,"h1":3.0,"hpf":180.0,"presence":2.5,"air":1.5}},{"key":"m_clean","name":"Studio Male","cat":"Male","icon":"🎧","desc":"Your own voice in studio quality: noise-free, clear, full","pitch":0.0,"formant":0.0,"changed":{"denoise":0.55,"deess":0.35,"hpf":75.0,"bass":1.5,"body":-1.0,"presence":2.0,"air":1.5,"comp":0.6}},{"key":"m_deep","name":"Deep Male","cat":"Male","icon":"🗿","desc":"Full, strong baritone male voice","pitch":-3.0,"formant":-1.5,"changed":{"pitch":-3.0,"formant":-1.5,"denoise":0.5,"deess":0.2,"hpf":60.0,"bass":3.0,"body":1.5,"presence":1.0,"air":0.5,"comp":0.6}},{"key":"m_bass","name":"Deep Bass","cat":"Male","icon":"🐻","desc":"Very deep, rumbling bass voice","pitch":-5.0,"formant":-2.6,"changed":{"pitch":-5.0,"formant":-2.6,"denoise":0.5,"deess":0.15,"hpf":45.0,"bass":4.5,"body":1.0,"presence":1.5,"comp":0.65}},{"key":"m_radio","name":"Radio DJ","cat":"Male","icon":"📻","desc":"Late-night FM host: close, warm, compressed","pitch":-1.5,"formant":-0.8,"changed":{"pitch":-1.5,"formant":-0.8,"denoise":0.55,"deess":0.4,"hpf":60.0,"bass":4.0,"body":0.5,"presence":3.0,"air":2.0,"comp":0.85}},{"key":"m_trailer","name":"Trailer Voice","cat":"Male","icon":"🎬","desc":"Huge and cinematic, like a movie trailer narrator","pitch":-6.0,"formant":-3.0,"changed":{"pitch":-6.0,"formant":-3.0,"denoise":0.55,"deess":0.2,"hpf":40.0,"bass":5.0,"presence":2.0,"reverb":0.16,"room":0.75,"comp":0.75}},{"key":"m_young","name":"Young Male","cat":"Male","icon":"🧢","desc":"A younger, energetic lad","pitch":2.5,"formant":1.0,"changed":{"pitch":2.5,"formant":1.0,"denoise":0.5,"deess":0.35,"hpf":90.0,"presence":1.5,"air":1.0,"comp":0.5}},{"key":"m_old","name":"Old Man","cat":"Male","icon":"👴","desc":"Shaky, breathy and tired old man","pitch":-1.5,"formant":-0.8,"changed":{"pitch":-1.5,"formant":-0.8,"denoise":0.5,"breath":0.18,"vibrato":0.28,"vibrato_rate":6.0,"deess":0.3,"hpf":110.0,"lpf":7500.0,"presence":-1.0,"comp":0.5}},{"key":"m_from_female","name":"Female to Male","cat":"Male","icon":"🔁","desc":"Turns a female voice into a convincing male voice","pitch":-6.5,"formant":-2.6,"changed":{"pitch":-6.5,"formant":-2.6,"denoise":0.5,"deess":0.3,"hpf":60.0,"bass":3.0,"body":1.0,"presence":1.0,"comp":0.6}},{"key":"c_robot","name":"Robot","cat":"Character","icon":"🤖","desc":"Classic metallic, single-pitch robot","pitch":0.0,"formant":0.0,"changed":{"denoise":0.6,"robot":1.0,"robot_hz":105.0,"hpf":120.0,"presence":3.0,"phaser":0.2,"comp":0.6}},{"key":"c_ai","name":"AI Assistant","cat":"Character","icon":"💠","desc":"Calm and flawless AI assistant","pitch":3.0,"formant":1.5,"changed":{"pitch":3.0,"formant":1.5,"denoise":0.6,"robot":0.35,"robot_hz":190.0,"deess":0.5,"hpf":130.0,"presence":2.0,"air":3.0,"chorus":0.25,"reverb":0.1,"room":0.35,"comp":0.6}},{"key":"c_cyborg","name":"Cyborg","cat":"Character","icon":"🦾","desc":"Half human, half machine: harsh and digital","pitch":-2.0,"formant":-1.0,"changed":{"pitch":-2.0,"formant":-1.0,"denoise":0.6,"robot":0.55,"robot_hz":85.0,"hpf":90.0,"presence":2.0,"bitcrush":11.0,"chorus":0.3,"comp":0.65}},{"key":"c_demon","name":"Demon","cat":"Character","icon":"😈","desc":"Layered an octave down: muffled and frightening demon","pitch":-6.0,"formant":-3.5,"changed":{"pitch":-6.0,"formant":-3.5,"denoise":0.6,"layer_mix":0.55,"hpf":40.0,"bass":4.0,"drive":7.0,"reverb":0.25,"room":0.6,"comp":0.7}},{"key":"c_giant","name":"Giant","cat":"Character","icon":"🏔️","desc":"A huge creature living in a cave","pitch":-8.0,"formant":-4.5,"changed":{"pitch":-8.0,"formant":-4.5,"denoise":0.6,"hpf":35.0,"bass":4.0,"body":2.0,"reverb":0.32,"room":0.85,"comp":0.65}},{"key":"c_monster","name":"Monster","cat":"Character","icon":"👹","desc":"Growling, savage orc/monster voice","pitch":-5.0,"formant":-1.0,"changed":{"pitch":-5.0,"formant":-1.0,"denoise":0.6,"layer_pitch":-7.0,"layer_mix":0.35,"hpf":50.0,"bass":3.0,"presence":2.0,"drive":12.0,"reverb":0.1,"comp":0.7}},{"key":"c_dark_lord","name":"Dark Lord","cat":"Character","icon":"🌑","desc":"Masked, metallic and commanding villain","pitch":-4.0,"formant":-2.0,"changed":{"pitch":-4.0,"formant":-2.0,"denoise":0.6,"hpf":60.0,"lpf":4800.0,"bass":3.0,"drive":4.0,"chorus":0.15,"reverb":0.12,"room":0.45,"comp":0.75}},{"key":"c_alien","name":"Alien","cat":"Character","icon":"👽","desc":"Wavering alien voice with mismatched formants","pitch":3.0,"formant":-2.5,"changed":{"pitch":3.0,"formant":-2.5,"denoise":0.6,"robot":0.2,"robot_hz":160.0,"layer_pitch":7.0,"layer_mix":0.3,"chorus":0.25,"phaser":0.5,"comp":0.5}},{"key":"c_ghost","name":"Ghost","cat":"Character","icon":"👻","desc":"Whispery, distant and eerie ghost","pitch":2.0,"formant":0.5,"changed":{"pitch":2.0,"formant":0.5,"denoise":0.6,"whisper":0.6,"hpf":160.0,"phaser":0.35,"delay":0.3,"delay_time":0.32,"delay_feedback":0.35,"reverb":0.5,"room":0.9,"comp":0.5}},{"key":"c_chipmunk","name":"Chipmunk","cat":"Character","icon":"🐿️","desc":"Funny helium-like chipmunk voice","pitch":10.0,"formant":10.0,"changed":{"pitch":10.0,"formant":10.0,"denoise":0.55,"deess":0.5,"hpf":200.0,"comp":0.5}},{"key":"c_child","name":"Child","cat":"Character","icon":"🧒","desc":"A school-age child's voice","pitch":8.0,"formant":4.5,"changed":{"pitch":8.0,"formant":4.5,"denoise":0.55,"deess":0.5,"hpf":180.0,"bass":-3.0,"presence":2.0,"comp":0.5}},{"key":"c_hacker","name":"Anonymous Hacker","cat":"Character","icon":"🕶️","desc":"Identity-masked anonymous voice with digital distortion","pitch":-4.0,"formant":-2.0,"changed":{"pitch":-4.0,"formant":-2.0,"denoise":0.6,"robot":0.3,"robot_hz":95.0,"hpf":180.0,"lpf":5000.0,"bitcrush":10.0,"chorus":0.3,"comp":0.7}},{"key":"c_static_deep","name":"Static Deep Voice","cat":"Character","icon":"📺","desc":"Like an identity-protected interview: staticky and deep","pitch":-5.0,"formant":-2.5,"changed":{"pitch":-5.0,"formant":-2.5,"denoise":0.5,"whisper":0.18,"hpf":70.0,"lpf":6500.0,"bass":3.0,"presence":2.0,"drive":8.0,"bitcrush":8.0,"comp":0.7}},{"key":"e_phone","name":"Telephone","cat":"Effect","icon":"☎️","desc":"An old landline phone call","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"hpf":400.0,"lpf":3400.0,"presence":4.0,"drive":5.0,"comp":0.7}},{"key":"e_radio","name":"Walkie-Talkie","cat":"Effect","icon":"📡","desc":"Tactical military radio: crackly and squeezed","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"gate_db":-50.0,"hpf":500.0,"lpf":3000.0,"presence":5.0,"drive":12.0,"bitcrush":9.0,"comp":0.8}},{"key":"e_megaphone","name":"Megaphone","cat":"Effect","icon":"📢","desc":"Street megaphone: harsh and loud","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"hpf":600.0,"lpf":4200.0,"presence":6.0,"drive":14.0,"comp":0.8}},{"key":"e_cave","name":"Cave","cat":"Effect","icon":"🕳️","desc":"Echo bouncing off stone walls","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"delay":0.35,"delay_time":0.28,"delay_feedback":0.35,"reverb":0.45,"room":0.9,"comp":0.5}},{"key":"e_hall","name":"Concert Hall","cat":"Effect","icon":"🏛️","desc":"Speaking in a large hall: wide and grand","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"presence":1.0,"reverb":0.4,"room":0.8,"comp":0.5}},{"key":"e_underwater","name":"Underwater","cat":"Effect","icon":"🌊","desc":"A muffled voice from under the water","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"lpf":1000.0,"bass":3.0,"chorus":0.6,"phaser":0.4,"comp":0.5}},{"key":"e_choir","name":"Choir","cat":"Effect","icon":"🎶","desc":"A crowded choir with an octave layer behind","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"layer_pitch":12.0,"layer_mix":0.35,"chorus":0.6,"reverb":0.3,"room":0.7,"comp":0.55}},{"key":"e_old_radio","name":"Old Radio","cat":"Effect","icon":"📼","desc":"A 1940s radio broadcast","pitch":0.0,"formant":0.0,"changed":{"denoise":0.5,"hpf":300.0,"lpf":4500.0,"presence":3.0,"drive":6.0,"bitcrush":10.0,"comp":0.7}}],"params":[{"key":"pitch","label":"Pitch","min":-12.0,"max":12.0,"step":0.1,"unit":"st","default":0.0,"section":"VOICE IDENTITY"},{"key":"formant","label":"Formant (throat timbre)","min":-12.0,"max":12.0,"step":0.1,"unit":"st","default":0.0,"section":"VOICE IDENTITY"},{"key":"denoise","label":"Noise Suppression","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.35,"section":"CLARITY & CLEANUP"},{"key":"gate_db","label":"Noise Gate","min":-90.0,"max":-20.0,"step":1.0,"unit":"dB","default":-70.0,"section":"OUTPUT & DYNAMICS"},{"key":"robot","label":"Robot","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"CHARACTER"},{"key":"robot_hz","label":"Robot Pitch","min":50.0,"max":300.0,"step":1.0,"unit":"Hz","default":110.0,"section":"CHARACTER"},{"key":"whisper","label":"Whisper","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"CHARACTER"},{"key":"breath","label":"Breath / Air","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"CHARACTER"},{"key":"vibrato","label":"Vibrato","min":0.0,"max":1.5,"step":0.01,"unit":"st","default":0.0,"section":"CHARACTER"},{"key":"vibrato_rate","label":"Vibrato Rate","min":1.0,"max":12.0,"step":0.1,"unit":"Hz","default":5.5,"section":"CHARACTER"},{"key":"deess","label":"De-esser (harsh S)","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.25,"section":"CLARITY & CLEANUP"},{"key":"layer_pitch","label":"Layer Pitch","min":-24.0,"max":24.0,"step":1.0,"unit":"st","default":-12.0,"section":"CHARACTER"},{"key":"layer_mix","label":"Layer (harmonizer)","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"CHARACTER"},{"key":"h1","label":"Fundamental (softness)","min":0.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"CHARACTER"},{"key":"hpf","label":"Low Cut","min":20.0,"max":1000.0,"step":1.0,"unit":"Hz","default":80.0,"section":"OUTPUT & DYNAMICS"},{"key":"lpf","label":"High Cut","min":1000.0,"max":20000.0,"step":10.0,"unit":"Hz","default":20000.0,"section":"OUTPUT & DYNAMICS"},{"key":"bass","label":"Bass","min":-12.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"CLARITY & CLEANUP"},{"key":"body","label":"Body","min":-12.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"CLARITY & CLEANUP"},{"key":"presence","label":"Clarity","min":-12.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"CLARITY & CLEANUP"},{"key":"air","label":"Brightness","min":-12.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"CLARITY & CLEANUP"},{"key":"drive","label":"Distortion","min":0.0,"max":30.0,"step":0.1,"unit":"dB","default":0.0,"section":"EFFECTS"},{"key":"bitcrush","label":"Bitcrush (0=off)","min":0.0,"max":16.0,"step":1.0,"unit":"bit","default":0.0,"section":"EFFECTS"},{"key":"chorus","label":"Chorus","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"EFFECTS"},{"key":"phaser","label":"Phaser","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"EFFECTS"},{"key":"delay","label":"Echo","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"EFFECTS"},{"key":"delay_time","label":"Echo Time","min":0.02,"max":1.0,"step":0.01,"unit":"sn","default":0.25,"section":"EFFECTS"},{"key":"delay_feedback","label":"Echo Feedback","min":0.0,"max":0.9,"step":0.01,"unit":"%","default":0.3,"section":"EFFECTS"},{"key":"reverb","label":"Reverb (room)","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.0,"section":"EFFECTS"},{"key":"room","label":"Room Size","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.4,"section":"EFFECTS"},{"key":"comp","label":"Compressor","min":0.0,"max":1.0,"step":0.01,"unit":"%","default":0.45,"section":"OUTPUT & DYNAMICS"},{"key":"volume","label":"Output Level","min":-24.0,"max":12.0,"step":0.1,"unit":"dB","default":0.0,"section":"OUTPUT & DYNAMICS"}],"hotkeys":{"bypass":"Ctrl+Alt+B","mute":"Ctrl+Alt+M","power":"Ctrl+Alt+V"},"sections":["CLARITY & CLEANUP","CHARACTER","EFFECTS","OUTPUT & DYNAMICS"]};
+const CAT_COLORS = {Female:"#FF6FB5", Male:"#4FA3FF", Character:"#B57BFF", Effect:"#2EE6A8"};
+const DESCRIBE = {
+  pitch:"How high or low you speak. Shifts the voice without changing speed.",
+  formant:"Perceived throat/head size. Up = smaller, more feminine or childlike; down = bigger, more giant-like.",
+  denoise:"Spectral noise suppression. Learns your room's noise floor and removes fans, hum and hiss.",
+  gate_db:"Mutes everything below this level between words. Leftmost = off.",
+  robot:"Fixed-pitch vocoder blend for a robotic, monotone voice.",
+  robot_hz:"The note the robot voice sings on.",
+  whisper:"Replaces the voiced tone with breathy noise for a whisper.",
+  breath:"Adds air and breathiness on top of the voice.",
+  vibrato:"Periodic pitch wobble depth (old man, nervous, singing).",
+  vibrato_rate:"How fast the vibrato wobbles.",
+  deess:"Tames harsh “s” and “sh” sounds that pitch-shifting can exaggerate.",
+  layer_pitch:"Interval of the extra harmonizer voice (−12 = an octave below).",
+  layer_mix:"Volume of the harmonizer voice (demons, choirs, aliens).",
+  h1:"Boosts the fundamental for a softer, rounder tone; key to natural female voices.",
+  hpf:"Removes rumble below this frequency.",
+  lpf:"Removes highs above this frequency (telephone, underwater). Rightmost = off.",
+  bass:"Low-shelf EQ at 160 Hz: warmth and weight.",
+  body:"Peak EQ at 350 Hz: fullness vs. boxiness.",
+  presence:"Peak EQ at 3.2 kHz: intelligibility and forwardness.",
+  air:"High-shelf EQ at 9 kHz: sparkle and brightness.",
+  drive:"Distortion amount (megaphone, monster). Level is auto-compensated.",
+  bitcrush:"Reduces bit depth for lo-fi digital grit. 0 = off.",
+  chorus:"Thickens the voice with modulated copies.",
+  phaser:"Sweeping, swirling phase effect.",
+  delay:"Echo wet level.",
+  delay_time:"Time between echoes.",
+  delay_feedback:"How many times the echo repeats.",
+  reverb:"Room reverb wet level.",
+  room:"Size of the simulated room.",
+  comp:"Evens out loud and quiet parts; adds broadcast punch. Make-up gain is automatic.",
+  volume:"Final output level before the limiter."
+};
+
+function fmt(v, unit){
+  if(unit==="%") return Math.round(v*100)+"%";
+  if(unit==="st") return (v>0?"+":"")+v.toFixed(1)+" st";
+  if(unit==="dB") return (v>0?"+":"")+v.toFixed(v%1?1:0)+" dB";
+  if(unit==="Hz") return v>=1000? (v/1000).toFixed(v%1000?1:0)+" kHz" : v+" Hz";
+  if(unit==="bit") return v+" bit";
+  if(unit==="sn") return Math.round(v*1000)+" ms";
+  return String(v);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- demo players ---------- */
+const DEMOS = [["original","🎙️","Original","Unprocessed source"],["m_clean","🎧","Studio Male","m_clean"],["f_natural","🌸","Natural Female","f_natural"],["m_deep","🗿","Deep Male","m_deep"],["m_trailer","🎬","Trailer Voice","m_trailer"],["c_robot","🤖","Robot","c_robot"],["c_demon","😈","Demon","c_demon"],["c_chipmunk","🐿️","Chipmunk","c_chipmunk"],["c_ghost","👻","Ghost","c_ghost"],["c_hacker","🕶️","Anonymous Hacker","c_hacker"],["e_phone","☎️","Telephone","e_phone"],["e_radio","📡","Walkie-Talkie","e_radio"]];
+const PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>', PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+const playersEl=document.getElementById("players"); let current=null;
+DEMOS.forEach(([key,emoji,name,sub])=>{
+  const el=document.createElement("div"); el.className="player"+(key==="original"?" original":"");
+  el.innerHTML=`<button class="pb" aria-label="Play ${esc(name)}">${PLAY}</button><div class="meta"><b><span class="emoji" aria-hidden="true">${emoji}</span> ${esc(name)}</b><small>${esc(sub)}</small><div class="bar"><i></i></div></div>`;
+  const audio=new Audio(); audio.preload="none"; audio.src=`assets/audio/${key}.mp3`;
+  const btn=el.querySelector(".pb"), bar=el.querySelector(".bar i");
+  const stop=()=>{audio.pause();el.classList.remove("playing");btn.innerHTML=PLAY;btn.setAttribute("aria-label","Play "+name)};
+  btn.onclick=()=>{ if(!audio.paused){stop();return} if(current&&current!==stop)current(); current=stop; audio.play().catch(()=>{}); el.classList.add("playing"); btn.innerHTML=PAUSE; btn.setAttribute("aria-label","Pause "+name)};
+  audio.ontimeupdate=()=>{bar.style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+"%"};
+  audio.onended=()=>{stop();bar.style.width="0"};
+  el.querySelector(".bar").onclick=e=>{if(audio.duration){const r=e.currentTarget.getBoundingClientRect();audio.currentTime=(e.clientX-r.left)/r.width*audio.duration}};
+  playersEl.appendChild(el);
+});
+
+/* ---------- presets table ---------- */
+const cats=["All",...new Set(DATA.presets.map(p=>p.cat))]; let activeCat="All";
+const catsEl=document.getElementById("pcats");
+cats.forEach(c=>{const b=document.createElement("button");b.className="tab";b.textContent=c;b.setAttribute("aria-selected",c==="All");b.onclick=()=>{activeCat=c;[...catsEl.children].forEach(x=>x.setAttribute("aria-selected",x===b));renderPresets()};catsEl.appendChild(b)});
+const search=document.getElementById("psearch"); search.oninput=renderPresets;
+function renderPresets(){
+  const q=search.value.trim().toLowerCase();
+  const rows=DATA.presets.filter(p=>(activeCat==="All"||p.cat===activeCat)&&(!q||(p.name+" "+p.desc+" "+p.key+" "+p.cat).toLowerCase().includes(q)));
+  document.getElementById("ptable").innerHTML=rows.map(p=>{const c=CAT_COLORS[p.cat]||"#999";
+    return `<tr><td style="font-size:20px">${p.icon}</td><td><b>${esc(p.name)}</b></td><td><span class="chip" style="color:${c};background:${c}1f">${esc(p.cat)}</span></td><td class="num">${fmt(p.pitch,"st")}</td><td class="num">${fmt(p.formant,"st")}</td><td class="muted">${esc(p.desc)}</td><td><span class="k">${p.key}</span></td></tr>`}).join("")||`<tr><td colspan="7" class="muted">No voices match “${esc(q)}”.</td></tr>`;
+  document.getElementById("pcount").textContent=rows.length+" / "+DATA.presets.length;
+}
+renderPresets();
+
+/* ---------- controls table ---------- */
+const order=["VOICE IDENTITY",...DATA.sections];
+document.getElementById("ctable").innerHTML=[...DATA.params].sort((a,b)=>order.indexOf(a.section)-order.indexOf(b.section)).map(p=>
+  `<tr><td><span class="k">${esc(p.section)}</span></td><td><b>${esc(p.label)}</b></td><td class="num">${fmt(p.min,p.unit)} … ${fmt(p.max,p.unit)}</td><td class="num">${fmt(p.default,p.unit)}</td><td class="muted">${esc(DESCRIBE[p.key]||"")}</td></tr>`).join("");
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab[data-t]").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab[data-t]").forEach(x=>x.setAttribute("aria-selected",x===t));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+t.dataset.t));
+});
+
+/* ---------- copy buttons ---------- */
+document.querySelectorAll(".copy").forEach(b=>b.onclick=()=>{
+  const text=b.closest(".code").querySelector("pre").innerText;
+  navigator.clipboard.writeText(text).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1400)},()=>{});
+});
+</script>
+</body>
+</html>

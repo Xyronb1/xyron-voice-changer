@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# PyInstaller output
+build/
+build_*/
+dist/
+dist_*/
+
+# Third-party driver (shipped separately as a release asset, see README)
+VBCable/
+
+# Local / editor
+.claude/
+.vscode/
+.idea/
+*.log
+.env
