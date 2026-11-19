@@ -7,13 +7,13 @@
 **Become any voice. In real time.**
 
 A free, open-source, studio-grade voice changer for Windows with formant-aware pitch shifting,
-37 hand-tuned voices, 31 live controls and zero telemetry. Works with Discord, OBS, games and video calls.
+37 hand-tuned voices, 33 live controls and zero telemetry. Works with Discord, OBS, games and video calls.
 
 [![Release](https://img.shields.io/github/v/release/Xyronb1/xyron-voice-changer?style=flat-square&color=7c5cff)](https://github.com/Xyronb1/xyron-voice-changer/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Xyronb1/xyron-voice-changer/total?style=flat-square&color=2ee6a8)](https://github.com/Xyronb1/xyron-voice-changer/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-4fa3ff?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.12-ffc857?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-113%20passing-2ee6a8?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-137%20passing-2ee6a8?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/license-MIT-b57bff?style=flat-square)](LICENSE)
 
 [**🌐 Website & live audio demo**](https://Xyronb1.github.io/xyron-voice-changer/) ·
@@ -79,6 +79,9 @@ source contains no networking code at all.
 | 📁 **Offline file conversion** | WAV, MP3, FLAC, OGG, M4A, AIFF → 24-bit WAV, from the app or the CLI. |
 | 📊 **Live telemetry** | Latency, CPU load, buffer health, input/output meters and a real-time spectrum. |
 | 🛟 **Self-healing audio** | Adaptive ±0.5 % micro-resampling absorbs clock drift; a watchdog reconnects dropped devices. |
+| 👩 **Sounds like you, as a woman or child** | *Auto Pitch* measures your own voice and reaches the same target pitch whether you speak high or low; *Intonation* adds the livelier melody of female and child speech. |
+| ✨ **Crackle-free highs** | “S”, “sh” and breath noise above 5.5 kHz are never pitch- or formant-shifted, removing the fizzy edge typical of voice changers. |
+| 🚀 **One-click installer** | No admin rights, Start menu & desktop shortcuts, uninstaller, loading screen and single-instance protection. |
 | 🌍 **English & Turkish** | Full UI, presets and CLI translations; follows your Windows display language on first launch. |
 | 🔒 **Private by design** | 100 % offline. Your voice never leaves your computer. |
 
@@ -93,7 +96,10 @@ sentence rendered through 11 presets by the app's own engine. You can also downl
 | **Chipmunk** | **Ghost** | **Anonymous Hacker** | **Telephone** | **Walkie-Talkie** | **Studio Male** |
 | [▶ c_chipmunk.mp3](docs/assets/audio/c_chipmunk.mp3) | [▶ c_ghost.mp3](docs/assets/audio/c_ghost.mp3) | [▶ c_hacker.mp3](docs/assets/audio/c_hacker.mp3) | [▶ e_phone.mp3](docs/assets/audio/e_phone.mp3) | [▶ e_radio.mp3](docs/assets/audio/e_radio.mp3) | [▶ m_clean.mp3](docs/assets/audio/m_clean.mp3) |
 
-<sub>Source: a synthetic male speech sample, Studio Quality mode, presets applied with no manual tweaking.</sub>
+| **Young Woman** | **Little Girl** | **Child** | | | |
+| [▶ f_young.mp3](docs/assets/audio/f_young.mp3) | [▶ f_girl.mp3](docs/assets/audio/f_girl.mp3) | [▶ c_child.mp3](docs/assets/audio/c_child.mp3) | | | |
+
+<sub>Source: a synthetic male speech sample, Studio Quality mode, v1.3 engine, presets applied with no manual tweaking.</sub>
 
 ## 🚀 Quick start
 
@@ -117,11 +123,12 @@ sentence rendered through 11 presets by the app's own engine. You can also downl
 > Extract the pack into a folder named `VBCable` next to the EXE and the in-app
 > **“⚠ VB-Cable not found: Install”** button will launch the installer for you.
 
-### 2 · Download and run
+### 2 · Install and run
 
 | File | Description |
 |---|---|
-| [`Xyron-Voice-Changer-win64.exe`](https://github.com/Xyronb1/xyron-voice-changer/releases/latest/download/Xyron-Voice-Changer-win64.exe) | Single portable executable. Double-click to run, nothing to install. |
+| [**`Xyron-Voice-Changer-Setup.exe`**](https://github.com/Xyronb1/xyron-voice-changer/releases/latest/download/Xyron-Voice-Changer-Setup.exe) | **Recommended.** One-click installer, no admin rights. Installs for your account with Start menu & desktop shortcuts and an uninstaller (*Settings → Apps*). Starts fast every time. |
+| [`Xyron-Voice-Changer-win64.exe`](https://github.com/Xyronb1/xyron-voice-changer/releases/latest/download/Xyron-Voice-Changer-win64.exe) | Single portable executable. Nothing to install, but it unpacks itself on every launch, so it starts slower. |
 | [`Xyron-Voice-Changer-win64-portable.zip`](https://github.com/Xyronb1/xyron-voice-changer/releases/latest/download/Xyron-Voice-Changer-win64-portable.zip) | Folder build: starts faster and triggers fewer antivirus false positives. Extract and run `Xyron Voice Changer.exe`. |
 | `SHA256SUMS.txt` | Checksums to verify your download. |
 
@@ -185,52 +192,53 @@ In every app the rule is the same: **use `CABLE Output (VB-Audio Virtual Cable)`
 
 ## 🎭 Voice presets
 
-Values are tuned for a typical adult male speaking voice (~100–140 Hz). If your voice is higher, start
-from **Female to Male** or nudge the XY pad. *Pitch* and *formant* are in semitones (12 st = one octave).
+Values are tuned for an adult male speaking voice of about 120 Hz. Presets marked **Auto** adapt to your
+real voice: the app measures your average pitch and corrects the shift, so a higher or lower voice reaches
+the same target. Others shift by the fixed amount shown. *Pitch* and *formant* are in semitones (12 st = one octave).
 
-| | Voice | Category | Pitch | Formant | Description | CLI key |
-|---|---|---|---:|---:|---|---|
-| 🌸 | **Natural Female** | Female | +10.0 st | +3.2 st | Realistic everyday female voice: pitch, timbre and fundamental change together | `f_natural` |
-| 🎀 | **Young Woman** | Female | +11.5 st | +3.8 st | Energetic, bright and sweet young woman | `f_young` |
-| 👠 | **Mature Female** | Female | +8.5 st | +2.6 st | Full, elegant and confident mature woman | `f_mature` |
-| 🍷 | **Velvet Female** | Female | +8.5 st | +2.8 st | Slightly husky, breathy and soft female tone | `f_velvet` |
-| 🎌 | **Anime Girl** | Female | +12.0 st | +5.0 st | Very bright, cute anime character voice | `f_anime` |
-| 🎙️ | **Female Announcer** | Female | +9.5 st | +3.0 st | Broadcast-quality, compressed and clear female announcer | `f_announcer` |
-| 🤫 | **Whisper (ASMR)** | Female | +8.0 st | +3.0 st | Soft female whisper with a close-mic feel | `f_whisper` |
-| 🧸 | **Little Girl** | Female | +12.0 st | +6.0 st | Childlike, thin and innocent little girl voice | `f_girl` |
-| 🎧 | **Studio Male** | Male | +0.0 st | +0.0 st | Your own voice in studio quality: noise-free, clear, full | `m_clean` |
-| 🗿 | **Deep Male** | Male | -3.0 st | -1.5 st | Full, strong baritone male voice | `m_deep` |
-| 🐻 | **Deep Bass** | Male | -5.0 st | -2.6 st | Very deep, rumbling bass voice | `m_bass` |
-| 📻 | **Radio DJ** | Male | -1.5 st | -0.8 st | Late-night FM host: close, warm, compressed | `m_radio` |
-| 🎬 | **Trailer Voice** | Male | -6.0 st | -3.0 st | Huge and cinematic, like a movie trailer narrator | `m_trailer` |
-| 🧢 | **Young Male** | Male | +2.5 st | +1.0 st | A younger, energetic lad | `m_young` |
-| 👴 | **Old Man** | Male | -1.5 st | -0.8 st | Shaky, breathy and tired old man | `m_old` |
-| 🔁 | **Female to Male** | Male | -6.5 st | -2.6 st | Turns a female voice into a convincing male voice | `m_from_female` |
-| 🤖 | **Robot** | Character | +0.0 st | +0.0 st | Classic metallic, single-pitch robot | `c_robot` |
-| 💠 | **AI Assistant** | Character | +3.0 st | +1.5 st | Calm and flawless AI assistant | `c_ai` |
-| 🦾 | **Cyborg** | Character | -2.0 st | -1.0 st | Half human, half machine: harsh and digital | `c_cyborg` |
-| 😈 | **Demon** | Character | -6.0 st | -3.5 st | Layered an octave down: muffled and frightening demon | `c_demon` |
-| 🏔️ | **Giant** | Character | -8.0 st | -4.5 st | A huge creature living in a cave | `c_giant` |
-| 👹 | **Monster** | Character | -5.0 st | -1.0 st | Growling, savage orc/monster voice | `c_monster` |
-| 🌑 | **Dark Lord** | Character | -4.0 st | -2.0 st | Masked, metallic and commanding villain | `c_dark_lord` |
-| 👽 | **Alien** | Character | +3.0 st | -2.5 st | Wavering alien voice with mismatched formants | `c_alien` |
-| 👻 | **Ghost** | Character | +2.0 st | +0.5 st | Whispery, distant and eerie ghost | `c_ghost` |
-| 🐿️ | **Chipmunk** | Character | +10.0 st | +10.0 st | Funny helium-like chipmunk voice | `c_chipmunk` |
-| 🧒 | **Child** | Character | +8.0 st | +4.5 st | A school-age child's voice | `c_child` |
-| 🕶️ | **Anonymous Hacker** | Character | -4.0 st | -2.0 st | Identity-masked anonymous voice with digital distortion | `c_hacker` |
-| 📺 | **Static Deep Voice** | Character | -5.0 st | -2.5 st | Like an identity-protected interview: staticky and deep | `c_static_deep` |
-| ☎️ | **Telephone** | Effect | +0.0 st | +0.0 st | An old landline phone call | `e_phone` |
-| 📡 | **Walkie-Talkie** | Effect | +0.0 st | +0.0 st | Tactical military radio: crackly and squeezed | `e_radio` |
-| 📢 | **Megaphone** | Effect | +0.0 st | +0.0 st | Street megaphone: harsh and loud | `e_megaphone` |
-| 🕳️ | **Cave** | Effect | +0.0 st | +0.0 st | Echo bouncing off stone walls | `e_cave` |
-| 🏛️ | **Concert Hall** | Effect | +0.0 st | +0.0 st | Speaking in a large hall: wide and grand | `e_hall` |
-| 🌊 | **Underwater** | Effect | +0.0 st | +0.0 st | A muffled voice from under the water | `e_underwater` |
-| 🎶 | **Choir** | Effect | +0.0 st | +0.0 st | A crowded choir with an octave layer behind | `e_choir` |
-| 📼 | **Old Radio** | Effect | +0.0 st | +0.0 st | A 1940s radio broadcast | `e_old_radio` |
+| | Voice | Category | Pitch | Formant | Auto | Description | CLI key |
+|---|---|---|---:|---:|:---:|---|---|
+| 🌸 | **Natural Female** | Female | +9.0 st | +2.8 st | ✓ | Realistic everyday female voice: pitch, timbre and fundamental change together | `f_natural` |
+| 🎀 | **Young Woman** | Female | +10.5 st | +3.2 st | ✓ | Energetic, bright and sweet young woman | `f_young` |
+| 👠 | **Mature Female** | Female | +8.0 st | +2.5 st | ✓ | Full, elegant and confident mature woman | `f_mature` |
+| 🍷 | **Velvet Female** | Female | +8.0 st | +2.6 st | ✓ | Slightly husky, breathy and soft female tone | `f_velvet` |
+| 🎌 | **Anime Girl** | Female | +12.0 st | +4.5 st | ✓ | Very bright, cute anime character voice | `f_anime` |
+| 🎙️ | **Female Announcer** | Female | +8.5 st | +2.7 st | ✓ | Broadcast-quality, compressed and clear female announcer | `f_announcer` |
+| 🤫 | **Whisper (ASMR)** | Female | +8.0 st | +2.8 st | ✓ | Soft female whisper with a close-mic feel | `f_whisper` |
+| 🧸 | **Little Girl** | Female | +12.0 st | +4.5 st | ✓ | Childlike, thin and innocent little girl voice | `f_girl` |
+| 🎧 | **Studio Male** | Male | +0.0 st | +0.0 st |  | Your own voice in studio quality: noise-free, clear, full | `m_clean` |
+| 🗿 | **Deep Male** | Male | -3.0 st | -1.5 st |  | Full, strong baritone male voice | `m_deep` |
+| 🐻 | **Deep Bass** | Male | -5.0 st | -2.6 st |  | Very deep, rumbling bass voice | `m_bass` |
+| 📻 | **Radio DJ** | Male | -1.5 st | -0.8 st |  | Late-night FM host: close, warm, compressed | `m_radio` |
+| 🎬 | **Trailer Voice** | Male | -6.0 st | -3.0 st |  | Huge and cinematic, like a movie trailer narrator | `m_trailer` |
+| 🧢 | **Young Male** | Male | +2.5 st | +1.0 st | ✓ | A younger, energetic lad | `m_young` |
+| 👴 | **Old Man** | Male | -1.5 st | -0.8 st |  | Shaky, breathy and tired old man | `m_old` |
+| 🔁 | **Female to Male** | Male | -1.5 st | -2.6 st | ✓ | Turns a female voice into a convincing male voice | `m_from_female` |
+| 🤖 | **Robot** | Character | +0.0 st | +0.0 st |  | Classic metallic, single-pitch robot | `c_robot` |
+| 💠 | **AI Assistant** | Character | +3.0 st | +1.5 st |  | Calm and flawless AI assistant | `c_ai` |
+| 🦾 | **Cyborg** | Character | -2.0 st | -1.0 st |  | Half human, half machine: harsh and digital | `c_cyborg` |
+| 😈 | **Demon** | Character | -6.0 st | -3.5 st |  | Layered an octave down: muffled and frightening demon | `c_demon` |
+| 🏔️ | **Giant** | Character | -8.0 st | -4.5 st |  | A huge creature living in a cave | `c_giant` |
+| 👹 | **Monster** | Character | -5.0 st | -1.0 st |  | Growling, savage orc/monster voice | `c_monster` |
+| 🌑 | **Dark Lord** | Character | -4.0 st | -2.0 st |  | Masked, metallic and commanding villain | `c_dark_lord` |
+| 👽 | **Alien** | Character | +3.0 st | -2.5 st |  | Wavering alien voice with mismatched formants | `c_alien` |
+| 👻 | **Ghost** | Character | +2.0 st | +0.5 st |  | Whispery, distant and eerie ghost | `c_ghost` |
+| 🐿️ | **Chipmunk** | Character | +10.0 st | +10.0 st |  | Funny helium-like chipmunk voice | `c_chipmunk` |
+| 🧒 | **Child** | Character | +10.5 st | +4.0 st | ✓ | A school-age child's voice | `c_child` |
+| 🕶️ | **Anonymous Hacker** | Character | -4.0 st | -2.0 st |  | Identity-masked anonymous voice with digital distortion | `c_hacker` |
+| 📺 | **Static Deep Voice** | Character | -5.0 st | -2.5 st |  | Like an identity-protected interview: staticky and deep | `c_static_deep` |
+| ☎️ | **Telephone** | Effect | +0.0 st | +0.0 st |  | An old landline phone call | `e_phone` |
+| 📡 | **Walkie-Talkie** | Effect | +0.0 st | +0.0 st |  | Tactical military radio: crackly and squeezed | `e_radio` |
+| 📢 | **Megaphone** | Effect | +0.0 st | +0.0 st |  | Street megaphone: harsh and loud | `e_megaphone` |
+| 🕳️ | **Cave** | Effect | +0.0 st | +0.0 st |  | Echo bouncing off stone walls | `e_cave` |
+| 🏛️ | **Concert Hall** | Effect | +0.0 st | +0.0 st |  | Speaking in a large hall: wide and grand | `e_hall` |
+| 🌊 | **Underwater** | Effect | +0.0 st | +0.0 st |  | A muffled voice from under the water | `e_underwater` |
+| 🎶 | **Choir** | Effect | +0.0 st | +0.0 st |  | A crowded choir with an octave layer behind | `e_choir` |
+| 📼 | **Old Radio** | Effect | +0.0 st | +0.0 st |  | A 1940s radio broadcast | `e_old_radio` |
 
 ## 🎛️ Controls reference
 
-All 31 parameters change in real time while you speak.
+All 33 parameters change in real time while you speak.
 
 | Section | Control | Range | Default | What it does |
 |---|---|---|---|---|
@@ -242,6 +250,8 @@ All 31 parameters change in real time while you speak.
 | Clarity & Cleanup | **Body** | -12 dB … +12 dB | +0 dB | Peak at 350 Hz: fullness vs. boxiness |
 | Clarity & Cleanup | **Clarity** | -12 dB … +12 dB | +0 dB | Peak at 3.2 kHz: intelligibility |
 | Clarity & Cleanup | **Brightness** | -12 dB … +12 dB | +0 dB | High shelf at 9 kHz: sparkle |
+| Character | **Auto Pitch (adapts to your voice)** | 0% … 100% | 0% | Measures your average pitch and corrects the shift so every speaker reaches the same target voice |
+| Character | **Intonation (speech melody)** | 0.50× … 2.00× | 1.00× | Scales your natural pitch movement; above 1× gives the livelier melody of female and child speech |
 | Character | **Robot** | 0% … 100% | 0% | Fixed-pitch vocoder blend for a robotic voice |
 | Character | **Robot Pitch** | 50 Hz … 300 Hz | 110 Hz | The note the robot voice sings on |
 | Character | **Whisper** | 0% … 100% | 0% | Replaces the voiced tone with breathy noise |
@@ -402,8 +412,11 @@ xyrox_voice/
 ├── i18n.py             English / Turkish translations, system-language detection
 ├── hotkeys.py          global Windows hotkeys via ctypes (no extra dependency)
 ├── render.py           offline file rendering
+├── startup.py          single-instance lock, focus running window, close loading screen
 └── config.py           settings.json + migration from older versions
-tests/                  pytest suite (113 tests)
+installer/              one-click setup (xyron_setup.py + PyInstaller spec)
+tools/build_release.py  builds every release file + SHA256SUMS
+tests/                  pytest suite (137 tests)
 docs/                   project website (GitHub Pages)
 Xyron_Voice_Changer.spec          PyInstaller: single-file EXE
 Xyron_Voice_Changer_onedir.spec   PyInstaller: portable folder build
@@ -436,8 +449,16 @@ migration and translation completeness. Tests never touch your real `%APPDATA%`.
 
 ### Build the executables
 
+One command builds the installer, the single-file EXE, the portable zip and `SHA256SUMS.txt` into `release\`:
+
 ```powershell
 .venv\Scripts\python.exe -m pip install pyinstaller
+.venv\Scripts\python.exe tools\build_release.py
+```
+
+Or build them one by one:
+
+```powershell
 
 # single portable file  ->  dist\Xyron Voice Changer.exe
 .venv\Scripts\python.exe -m PyInstaller --noconfirm --clean Xyron_Voice_Changer.spec
@@ -518,6 +539,21 @@ appears nowhere, reinstall it as administrator and reboot.
 Choose *Engine quality → Low Latency* (≈ 21 ms engine latency) with WASAPI. *Hear myself* always sounds a
 bit delayed and doubled because you also hear your real voice through your skull; *Record 5 s and listen*
 gives a more honest impression.
+</details>
+
+<details>
+<summary><b>The app starts slowly or sometimes not at all.</b></summary>
+
+Use the **installer**. The single-file EXE unpacks about 75 MB to a temporary folder on every launch and some
+antivirus products scan all of it each time. The installed app starts in a few seconds, shows a loading screen
+immediately, and a second click brings the running window to the front instead of starting another copy.
+</details>
+
+<details>
+<summary><b>The female or child voice sounds thin or cartoonish.</b></summary>
+
+Keep *Auto Pitch* at 100 % and *Intonation* above 1×, and speak with normal energy. Still too high? Lower *Pitch*
+by 1–2 st. Sounds like a man with a high voice? Raise *Formant* slightly.
 </details>
 
 <details>

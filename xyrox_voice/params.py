@@ -26,6 +26,8 @@ class VoiceParams:
     layer_pitch: float = -12.0
     layer_mix: float = 0.0
     h1: float = 0.0
+    auto_pitch: float = 0.0
+    intonation: float = 1.0
     # --- Ton / EQ
     hpf: float = 80.0
     lpf: float = 20000.0
@@ -53,7 +55,7 @@ class VoiceParams:
             robot=self.robot, robot_hz=self.robot_hz, whisper=self.whisper,
             breath=self.breath, vibrato=self.vibrato, vibrato_rate=self.vibrato_rate,
             deess=self.deess, layer_pitch=self.layer_pitch, layer_mix=self.layer_mix,
-            h1=self.h1,
+            h1=self.h1, auto_pitch=self.auto_pitch, intonation=self.intonation,
         )
 
     def to_dict(self) -> dict[str, float]:
@@ -95,6 +97,8 @@ PARAM_SPECS: dict[str, tuple[float, float, float, str, str]] = {
     "layer_pitch": (-24.0, 24.0, 1.0, "Katman Perdesi", "st"),
     "layer_mix": (0.0, 1.0, 0.01, "Katman (harmonizer)", "%"),
     "h1": (0.0, 12.0, 0.1, "Temel Ton (yumuşaklık)", "dB"),
+    "auto_pitch": (0.0, 1.0, 0.01, "Otomatik Perde (sesine uyar)", "%"),
+    "intonation": (0.5, 2.0, 0.01, "Tonlama (konuşma melodisi)", "x"),
     "hpf": (20.0, 1000.0, 1.0, "Alçak Kesici", "Hz"),
     "lpf": (1000.0, 20000.0, 10.0, "Tiz Kesici", "Hz"),
     "bass": (-12.0, 12.0, 0.1, "Bas", "dB"),
@@ -140,4 +144,6 @@ def format_param(name: str, value: float) -> str:
         return tr("Kapalı") if value < 1 else f"{value:.0f} bit"
     if unit == "sn":
         return f"{value * 1000:.0f} ms"
+    if unit == "x":
+        return f"{value:.2f}×"
     return f"{value:.2f}"

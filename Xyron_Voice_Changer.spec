@@ -1,4 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
+# Tek dosya (onefile) sürümü: her açılışta kendini Temp'e açar. Açılış ekranı (splash) bu sırada
+# hemen görünür ki kullanıcı programın açıldığını anlasın ve tekrar tıklamasın.
 # Derleme: .venv\Scripts\python.exe -m PyInstaller --noconfirm --clean Xyron_Voice_Changer.spec
 from PyInstaller.utils.hooks import collect_all
 
@@ -20,14 +22,28 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     runtime_hooks=[],
-    excludes=["pytest", "matplotlib", "scipy", "pandas", "IPython"],
+    excludes=["pytest", "matplotlib", "scipy", "pandas", "IPython", "unittest", "pydoc",
+              "lib2to3", "xmlrpc"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
 
+splash = Splash(
+    "assets/splash.png",
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=(40, 236),
+    text_size=10,
+    text_color="#a3a8c7",
+    text_default="Loading...",
+    always_on_top=True,
+)
+
 exe = EXE(
     pyz,
     a.scripts,
+    splash,
+    splash.binaries,
     a.binaries,
     a.datas,
     [],

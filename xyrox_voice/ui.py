@@ -13,7 +13,7 @@ from typing import Callable
 
 import customtkinter as ctk
 
-from . import APP_NAME, __version__
+from . import APP_NAME, __version__, startup
 from .audio_io import (SOUNDDEVICE_ERROR, AudioRouter, Device, db_to_meter, default_devices,
                        find_device, is_cable, list_devices, list_hostapis)
 from .config import AppConfig, app_data_dir
@@ -48,7 +48,7 @@ TEST_SECONDS = 5.0
 # (başlık, parametreler, açık mı) — başlıklar ekrana basılırken çevrilir.
 SECTIONS: list[tuple[str, list[str], bool]] = [
     ("NETLİK & TEMİZLİK", ["denoise", "presence", "bass", "air", "body", "deess"], True),
-    ("KARAKTER", ["h1", "breath", "whisper", "robot", "robot_hz", "vibrato", "vibrato_rate",
+    ("KARAKTER", ["auto_pitch", "intonation", "h1", "breath", "whisper", "robot", "robot_hz", "vibrato", "vibrato_rate",
                   "layer_mix", "layer_pitch"], False),
     ("EFEKTLER", ["reverb", "room", "delay", "delay_time", "delay_feedback", "chorus", "phaser",
                   "drive", "bitcrush"], False),
@@ -1105,7 +1105,16 @@ class VoiceStudioApp(ctk.CTk):
         self.destroy()
 
 
+_instance_lock: object | None = None
+
+
 def run_app(language: str | None = None) -> int:
+    global _instance_lock
+    _instance_lock = startup.acquire_single_instance()
+    if _instance_lock is None:  # zaten açık: yeni kopya açma, açık olanı öne getir
+        startup.close_splash()
+        startup.wait_and_focus_existing_window(APP_NAME)
+        return 0
     if sys.platform == "win32":
         try:  # görev çubuğunda Python ikonu yerine uygulamanın kendi ikonu
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Xyron.VoiceChanger")
@@ -1113,5 +1122,7 @@ def run_app(language: str | None = None) -> int:
             pass
     ctk.set_appearance_mode("dark")
     app = VoiceStudioApp(language)
+    app.update_idletasks()
+    startup.close_splash()
     app.mainloop()
     return 0

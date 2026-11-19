@@ -50,6 +50,8 @@ EN: dict[str, str] = {
     "İşleme hatası: {error}": "Processing error: {error}",
     "Kullanıcı profilleri okunamadı: {error}": "Could not read user profiles: {error}",
     "Kendi kaydettiğin profil": "A profile you saved",
+    "Otomatik Perde (sesine uyar)": "Auto Pitch (adapts to your voice)",
+    "Tonlama (konuşma melodisi)": "Intonation (speech melody)",
     # ------------------------------------------------------------ genel arayüz
     "BAŞLAT": "START",
     "DURDUR": "STOP",

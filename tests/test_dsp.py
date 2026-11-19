@@ -110,9 +110,114 @@ def test_h1_boost_strengthens_fundamental_only(voice120):
 
 def test_formant_shift_is_smaller_at_low_frequencies():
     eng = VoiceEngine(SR)
+    hz = eng.bins * eng.bin_hz
     assert eng.formant_weight[0] == pytest.approx(0.7)
-    assert eng.formant_weight[-1] == pytest.approx(1.0)
-    assert np.all(np.diff(eng.formant_weight) >= 0)
+    assert np.all(eng.formant_weight[(hz >= 1500) & (hz <= 4500)] == pytest.approx(1.0))
+    assert np.all(np.diff(eng.formant_weight[hz <= 4500]) >= 0)
+
+
+def test_formant_shift_fades_out_in_the_sibilance_band():
+    """Tiz bantta formant kaydırılmaz: "s/ş" ve nefes gürültüsü büyüyüp cızırtı yapmasın."""
+    eng = VoiceEngine(SR)
+    hz = eng.bins * eng.bin_hz
+    assert np.all(eng.formant_weight[hz >= 7000] == 0.0)
+    assert np.all(np.diff(eng.formant_weight[hz >= 4500]) <= 0)
+
+
+def _band_energy(x: np.ndarray, lo: float, hi: float) -> float:
+    spec = np.abs(np.fft.rfft(x * np.hanning(x.size))) ** 2
+    hz = np.fft.rfftfreq(x.size, 1 / SR)
+    return float(spec[(hz >= lo) & (hz < hi)].sum())
+
+
+def test_pitch_shift_does_not_add_high_frequency_fizz():
+    """Perde + formant yukarı kaydırılınca 8 kHz üstü enerji girişin ~2 katını geçmez.
+
+    Erkek sesindeki "s" gürültüsü 3-6 kHz'tedir; eski motor bunu 9-12 kHz'e taşıyıp tizi
+    ~10 dB şişiriyordu (cızırtı).
+    """
+    rng = np.random.default_rng(1)
+    voice = harmonic_voice(120.0, 2.0)
+    noise = np.fft.rfft(rng.normal(0, 1.0, voice.size))
+    hz = np.fft.rfftfreq(voice.size, 1 / SR)
+    noise *= np.where((hz > 3000) & (hz < 6000), 1.0, 0.003)
+    sib = np.fft.irfft(noise, n=voice.size)
+    x = (voice + 0.05 * sib / np.std(sib)).astype(np.float32)
+    eng = VoiceEngine(SR)
+    eng.set_params(EngineParams(pitch=10.0, formant=3.0))
+    y = run_blocks(eng.process, x)[eng.latency_samples:]
+    seg_in, seg_out = x[SR // 2:SR // 2 + 32768], y[SR // 2:SR // 2 + 32768]
+    assert _band_energy(seg_out, 8000, 20000) < 2.0 * _band_energy(seg_in, 8000, 20000)
+
+
+def _median_f0(y: np.ndarray, start: float, end: float) -> float:
+    est = [estimate_f0(y[int(s * SR) - SR // 2:]) for s in np.arange(start, end, 0.25)]
+    return float(np.median(est))
+
+
+@pytest.mark.parametrize("speaker_hz", [100.0, 150.0])
+def test_auto_pitch_reaches_the_same_target_for_any_speaker(speaker_hz):
+    """Otomatik perde: 120 Hz'e göre +9 st'lik hedef, konuşanın perdesinden bağımsız ~202 Hz."""
+    x = harmonic_voice(speaker_hz, 6.0)
+    eng = VoiceEngine(SR)
+    eng.set_params(EngineParams(pitch=9.0, auto_pitch=1.0))
+    y = run_blocks(eng.process, x)[eng.latency_samples:]
+    target = 120.0 * 2 ** (9 / 12)
+    assert _median_f0(y, 4.0, 5.5) == pytest.approx(target, rel=0.06)
+
+
+def test_speaker_pitch_relearns_when_a_different_person_talks():
+    """Önce 100 Hz'lik, sonra 230 Hz'lik biri konuşursa ortalama yeni kişiye uyar."""
+    eng = VoiceEngine(SR)
+    eng.set_params(EngineParams(pitch=9.0, auto_pitch=1.0))
+    run_blocks(eng.process, harmonic_voice(100.0, 4.0))
+    assert np.exp(eng._f0_mean_log) == pytest.approx(100.0, rel=0.08)
+    run_blocks(eng.process, harmonic_voice(230.0, 6.0))
+    assert np.exp(eng._f0_mean_log) == pytest.approx(230.0, rel=0.08)
+
+
+def test_low_formant_envelope_mapping_stays_monotonic():
+    eng = VoiceEngine(SR)
+    log_env = np.linspace(0.0, -5.0, eng.n_bins)  # tize doğru azalan zarf
+    gain = eng._formant_gain(log_env, eng.bins.astype(float), 2 ** (-12 / 12))
+    assert np.all(np.isfinite(gain))
+    # Azalan zarf + aşağı kaydırma: hedef zarf da azalan kalmalı (geri katlanma yok).
+    target = np.log(gain) + log_env
+    assert np.all(np.diff(target) <= 1e-9)
+
+
+def test_auto_pitch_off_keeps_fixed_semitones():
+    x = harmonic_voice(150.0, 4.0)
+    eng = VoiceEngine(SR)
+    eng.set_params(EngineParams(pitch=9.0))
+    y = run_blocks(eng.process, x)[eng.latency_samples:]
+    assert _median_f0(y, 2.5, 3.5) == pytest.approx(150.0 * 2 ** (9 / 12), rel=0.04)
+
+
+def _gliding_voice(f_lo: float, f_hi: float, seconds: float) -> np.ndarray:
+    """Perdesi f_lo ile f_hi arasında 1 Hz'lik sinüsle gidip gelen sentetik ses."""
+    t = np.arange(int(SR * seconds)) / SR
+    f0 = np.sqrt(f_lo * f_hi) * (f_hi / f_lo) ** (0.5 * np.sin(2 * np.pi * 0.5 * t))
+    phase = 2 * np.pi * np.cumsum(f0) / SR
+    sig = sum(np.exp(-((h * 120 - 700) / 400) ** 2) * np.sin(h * phase) / h for h in range(1, 30))
+    return (0.3 * sig / np.max(np.abs(sig))).astype(np.float32)
+
+
+def _f0_range_semitones(y: np.ndarray, start: float, end: float) -> float:
+    est = np.array([estimate_f0(y[int(s * SR) - SR // 2:]) for s in np.arange(start, end, 0.1)])
+    st = 12 * np.log2(est / np.median(est))
+    return float(np.percentile(st, 90) - np.percentile(st, 10))
+
+
+def test_intonation_widens_the_speech_melody():
+    x = _gliding_voice(100.0, 140.0, 8.0)
+    ranges = {}
+    for amount in (1.0, 1.5):
+        eng = VoiceEngine(SR)
+        eng.set_params(EngineParams(pitch=5.0, intonation=amount))
+        y = run_blocks(eng.process, x)[eng.latency_samples:]
+        ranges[amount] = _f0_range_semitones(y, 4.0, 7.5)
+    assert ranges[1.5] > 1.25 * ranges[1.0]
 
 
 def test_invalid_configuration_rejected():

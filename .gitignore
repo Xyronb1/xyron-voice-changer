@@ -20,3 +20,7 @@ VBCable/
 .idea/
 *.log
 .env
+
+# Release output (tools/build_release.py)
+release/
+installer/dist/

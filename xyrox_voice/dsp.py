@@ -18,6 +18,17 @@ import numpy as np
 
 TWO_PI = 2.0 * math.pi
 SPEECH_RATIO = 5.0  # yumuşatılmış güç, minimumun ~7 dB üstündeyse o bin'de konuşma var say
+# Hazır profiller bu perdeye sahip bir konuşmacıya göre ayarlandı (ortalama yetişkin erkek).
+# Otomatik perde açıkken kaydırma, konuşanın gerçek perdesi bu değere göre düzeltilerek yapılır.
+REFERENCE_F0 = 120.0
+MAX_AUTO_SHIFT = math.log(2.0)        # otomatik düzeltme en fazla ±12 yarım ton
+MAX_TOTAL_SHIFT = 1.5 * math.log(2.0)  # toplam perde kaydırma en fazla ±18 yarım ton
+MAX_INTONATION_DEV = 0.5               # tonlama hesabında ortalamadan sapma sınırı (~±8.7 st)
+MAX_FRAME_SHIFT = 2.0 * math.log(2.0)  # vibrato ve tonlama dahil çerçeve başına en fazla ±24 st
+# "s/ş" ve nefes gürültüsünün olduğu tiz bant: perde/formant kaydırılırsa cızırtı yapar,
+# bu yüzden 5.5 kHz'den 7.5 kHz'e doğru giderek orijinal sinyale bırakılır.
+SIBILANCE_KEEP_FROM_HZ = 5500.0
+SIBILANCE_KEEP_SPAN_HZ = 2000.0
 
 
 @dataclass(frozen=True)
@@ -37,6 +48,8 @@ class EngineParams:
     layer_pitch: float = -12.0  # harmonizer katmanının perdesi (ana sese göre, yarım ton)
     layer_mix: float = 0.0      # 0..1 harmonizer katmanı seviyesi
     h1: float = 0.0             # dB; temel harmoniği (H1) güçlendirir: yumuşak, kadınsı ton
+    auto_pitch: float = 0.0     # 0..1; perde kaydırmayı konuşanın kendi perdesine göre uyarlar
+    intonation: float = 1.0     # 1 = aynı; >1 konuşma melodisini genişletir (kadın/çocuk)
 
 
 def periodic_hann(n: int) -> np.ndarray:
@@ -163,8 +176,12 @@ class VoiceEngine:
         self._win_ac = np.maximum(win_ac[self._lag_lo:self._lag_hi] / win_ac[0], 0.05)
 
         freqs = self.bins * self.bin_hz
-        # Formant kaydırma ağırlığı: 0 Hz'de %70, 1.5 kHz ve üstünde %100.
-        self.formant_weight = 0.7 + 0.3 * np.clip(freqs / 1500.0, 0.0, 1.0)
+        # Formant kaydırma ağırlığı: 0 Hz'de %70, 1.5-4.5 kHz arası %100, 7 kHz'de 0.
+        # Ses kimliği F1-F3'te (< 4 kHz); tiz bandı kaydırmak sadece cızırtıyı büyütüyordu.
+        self.formant_weight = ((0.7 + 0.3 * np.clip(freqs / 1500.0, 0.0, 1.0))
+                               * (1.0 - np.clip((freqs - 4500.0) / 2500.0, 0.0, 1.0)))
+        self.sibilance_keep = np.clip((freqs - SIBILANCE_KEEP_FROM_HZ) / SIBILANCE_KEEP_SPAN_HZ,
+                                      0.0, 1.0)
         self.breath_weight = np.clip((freqs - 1500.0) / 3500.0, 0.0, 1.0)
         self.sib_band = (freqs >= 4500.0) & (freqs <= 11000.0)
         self.sib_taper = np.clip((freqs - 3500.0) / 1000.0, 0.0, 1.0)
@@ -202,6 +219,11 @@ class VoiceEngine:
         self._f0_jumps = 0
         self._voiced = False
         self._h1_amount = 0.0
+        self._f0_mean_log = math.log(REFERENCE_F0)  # konuşanın ortalama perdesi (log Hz)
+        self._voiced_frames = 0
+        self._outlier_frames = 0
+        self._auto_log = 0.0      # yumuşatılmış otomatik perde düzeltmesi (log oran)
+        self._inton_log = 0.0      # yumuşatılmış tonlama katkısı (log oran)
         self.main_shifter.reset()
         self.layer_shifter.reset()
         self.last_spectrum = np.zeros(self.n_bins, dtype=np.float32)
@@ -287,7 +309,10 @@ class VoiceEngine:
         self._prev_energy = 0.6 * energy + 0.4 * self._prev_energy
 
         neutral = (abs(p.pitch) < 1e-3 and abs(p.formant) < 1e-3 and p.robot < 1e-3
-                   and p.layer_mix < 1e-3 and p.vibrato < 1e-3 and p.h1 < 0.05 and abs(self._log_ratio) < 1e-4 and abs(self._log_formant) < 1e-4)
+                   and p.layer_mix < 1e-3 and p.vibrato < 1e-3 and p.h1 < 0.05
+                   and p.auto_pitch < 1e-3 and abs(p.intonation - 1.0) < 1e-3
+                   and abs(self._log_ratio) < 1e-4 and abs(self._log_formant) < 1e-4
+                   and abs(self._auto_log) < 1e-4 and abs(self._inton_log) < 1e-4)
         if neutral:
             self._voiced = False
         else:
@@ -309,6 +334,9 @@ class VoiceEngine:
 
         if log_env is not None and abs(formant / ratio - 1.0) > 1e-4:
             out *= self._formant_gain(log_env, src_pos, formant)
+        if abs(ratio - 1.0) > 1e-4 or abs(formant - 1.0) > 1e-4:
+            # Tiz bantta orijinal sinyali koru: "s/ş" yerinde kalır, cızırtı oluşmaz.
+            out = out * (1.0 - self.sibilance_keep) + spec * self.sibilance_keep
 
         # Temel harmonik (H1) güçlendirme: kadın sesinde H1, üst harmoniklere göre belirgin
         # biçimde güçlüdür; perdesi yükseltilmiş erkek sesinde zayıf kalır ("incelmiş" hissi).
@@ -352,7 +380,18 @@ class VoiceEngine:
 
     def _frame_ratios(self, p: EngineParams) -> tuple[float, float]:
         """Yumuşatılmış perde ve formant oranlarını döndürür (vibrato dahil)."""
-        target_r = p.pitch / 12.0 * math.log(2.0)
+        # Otomatik perde: profil 120 Hz'lik bir sese göre ayarlı; konuşanın ortalama perdesi
+        # farklıysa kaydırma o kadar düzeltilir. Böylece ince sesli biri "kadın" profilinde
+        # cırtlak, kalın sesli biri de yetersiz kalmaz; herkes aynı hedef sese ulaşır.
+        target_auto = 0.0
+        if p.auto_pitch > 1e-3:
+            correction = math.log(REFERENCE_F0) - self._f0_mean_log
+            target_auto = p.auto_pitch * max(-MAX_AUTO_SHIFT, min(MAX_AUTO_SHIFT, correction))
+        slow = 1.0 - math.exp(-1.0 / (0.3 * self.frames_per_sec))
+        self._auto_log += (target_auto - self._auto_log) * slow
+
+        target_r = p.pitch / 12.0 * math.log(2.0) + self._auto_log
+        target_r = max(-MAX_TOTAL_SHIFT, min(MAX_TOTAL_SHIFT, target_r))
         target_f = p.formant / 12.0 * math.log(2.0)
         # ~25 ms'lik yumuşatma: slider sürüklerken veya preset değişiminde zıplama olmaz.
         alpha = 1.0 - math.exp(-1.0 / (0.025 * self.frames_per_sec))
@@ -360,7 +399,20 @@ class VoiceEngine:
         self._log_formant += (target_f - self._log_formant) * alpha
         self._advance_lfo()
         vib = p.vibrato / 12.0 * math.log(2.0) * math.sin(self._vib_phase)
-        return math.exp(self._log_ratio + vib), math.exp(self._log_formant)
+
+        # Tonlama: perdenin ortalamadan sapması büyütülür (kadın ve çocuk konuşması erkeğe göre
+        # daha melodiktir). Ünsüzlerde son değer tutulur ve yavaşça söner; zıplama olmaz.
+        if abs(p.intonation - 1.0) > 1e-3 and self._voiced and self._f0_log is not None:
+            dev = max(-MAX_INTONATION_DEV,
+                      min(MAX_INTONATION_DEV, self._f0_log - self._f0_mean_log))
+            target_i = (p.intonation - 1.0) * dev
+            coef = 1.0 - math.exp(-1.0 / (0.04 * self.frames_per_sec))
+        else:
+            target_i = 0.0
+            coef = 1.0 - math.exp(-1.0 / (0.3 * self.frames_per_sec))
+        self._inton_log += (target_i - self._inton_log) * coef
+        total = max(-MAX_FRAME_SHIFT, min(MAX_FRAME_SHIFT, self._log_ratio + vib + self._inton_log))
+        return math.exp(total), math.exp(self._log_formant)
 
     def _set_lifter(self, n_cep: int) -> None:
         self.n_cep = n_cep
@@ -400,10 +452,38 @@ class VoiceEngine:
             return
         self._voiced = True
 
+        self._update_speaker_pitch(self._f0_log)
+
         period = self.sample_rate / math.exp(self._f0_log)
         n_cep = int(max(self._cep_min, min(self._cep_max, 0.42 * period)))
         if abs(n_cep - self.n_cep) >= 2:
             self._set_lifter(n_cep)
+
+    def _update_speaker_pitch(self, f0_log: float) -> None:
+        """Konuşanın ortalama perdesini (log Hz) sağlam biçimde öğrenir.
+
+        İlk ~1.5 sn sesli konuşmada hızlı (τ 0.5 sn), sonra yavaş (τ 3 sn). Perde takipçisinin
+        ara sıra yaptığı oktav hataları ortalamayı kaydırmasın diye her adımın etkisi ±5 yarım
+        tonla sınırlanır; ısınmadan sonra ortalamadan bir oktavdan fazla uzak ölçümler atlanır.
+        """
+        if not math.isfinite(f0_log):
+            return
+        warm = self._voiced_frames < 1.5 * self.frames_per_sec
+        dev = f0_log - self._f0_mean_log
+        if not warm and abs(dev) > 0.6:
+            # Uzun süre (~1.5 sn sesli konuşma) hep uzak ölçülüyorsa bu hata değil, başka biri
+            # konuşuyor ya da ses değişti: öğrenmeye baştan başla.
+            self._outlier_frames += 1
+            if self._outlier_frames > 1.5 * self.frames_per_sec:
+                self._voiced_frames = 0
+                self._outlier_frames = 0
+            return
+        self._outlier_frames = 0
+        tau = 0.5 if warm else 3.0
+        alpha = 1.0 - math.exp(-1.0 / (tau * self.frames_per_sec))
+        self._f0_mean_log += max(-0.3, min(0.3, dev)) * alpha
+        self._f0_mean_log = max(math.log(65.0), min(math.log(450.0), self._f0_mean_log))
+        self._voiced_frames += 1
 
     def _formant_gain(self, log_env: np.ndarray, src_pos: np.ndarray,
                       formant: float) -> np.ndarray:
@@ -413,9 +493,14 @@ class VoiceEngine:
         """
         # Ses yolu tek oranla büyüyüp küçülmez: alt formant (F1) üsttekilerden daha az kayar.
         # Tek oran, büyük kaydırmada sesi kadın/erkek yerine "oyuncak/çocuk" gibi yapar.
-        target = np.interp(self.bins / formant ** self.formant_weight, self.bins, log_env)
+        # Konumlar artan kalmalı: ağırlık tizde sıfıra inerken çok düşük formantta (< -6 st)
+        # eşleme geri katlanıp zarfı ters çevirebiliyordu.
+        positions = np.maximum.accumulate(self.bins / formant ** self.formant_weight)
+        target = np.interp(positions, self.bins, log_env)
         moved = np.interp(src_pos, self.bins, log_env)
-        log_gain = np.clip(target - moved, -2.76, 1.38)  # -24 dB .. +12 dB
+        # -36 dB .. +12 dB. Alt sınır -24 dB iken yukarı kaydırılan tizler zarfa göre ~10 dB
+        # yetersiz bastırılıyor ve sesi cızırtılı yapıyordu.
+        log_gain = np.clip(target - moved, -4.14, 1.38)
         return np.exp(log_gain)
 
     def _denoise(self, spec: np.ndarray, mag: np.ndarray,

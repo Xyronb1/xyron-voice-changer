@@ -147,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
         if sys.stderr is not None:
             print(_("Hata: {error}").format(error=exc), file=sys.stderr)
         else:  # pencereli EXE: konsol yok, hatayı pencereyle göster
+            from xyrox_voice.startup import close_splash
+            close_splash()  # açılış ekranı hata penceresinin önünde kalmasın
             _show_error_dialog(f"{type(exc).__name__}: {exc}")
         return EXIT_ERROR
 
